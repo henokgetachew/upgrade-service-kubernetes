@@ -75,3 +75,5 @@ You should get the response from the server stating that upgrade succeeded.
 `{"message":"Successfuly upgraded 1 containers"}`
 
 Confirm that the nginx pod is now using image `1.21`.
+
+Please add information about how to run this in a docker container. 

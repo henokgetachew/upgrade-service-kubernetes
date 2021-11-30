@@ -1,6 +1,7 @@
 FROM node:17.2.0-alpine3.12
 LABEL maintainer "Henok G. Alemayehu henok@medic.org"
 
+# is this timezone change required? How come it's set for Addis_Ababa?
 ENV TIME_ZONE=Africa/Addis_Ababa
 
 RUN apk --update add tzdata && \
@@ -11,6 +12,7 @@ RUN apk --update add tzdata && \
 WORKDIR /usr/src/app
 COPY package.json .
 
+# please always use npm ci to make sure we don't end up with different dependencies in production
 RUN npm install
 ADD . /usr/src/app
 

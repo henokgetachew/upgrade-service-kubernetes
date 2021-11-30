@@ -1,4 +1,5 @@
 {
+    // we should document all of these
     "KUBECONFIG_DEFAULT_PATH": "",
     "CHT_DEPLOYMENT_NAME": "",
     "CHT_NAMESPACE": ""

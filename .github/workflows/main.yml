@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    # we should be running tests on all branches
     branches: [ master ]
   pull_request:
     branches: [ master ]
@@ -23,7 +24,7 @@ jobs:
             --agents 1
 
       - uses: actions/checkout@v2
-      
+
       - name: Use Node.js 16.x
         uses: actions/setup-node@v1
         with:
@@ -33,4 +34,7 @@ jobs:
         run: npm ci
 
       - name: Run tests
+        # We should definitely be running all e2e tests when this code runs in a container
+        # and check what to expect in terms of mounted volumes, exposed ports, configuration and so on
+        # we should also make sure we're running tests against the "compiled" javascript, not typescript
         run: npm run test-on-pre-existing-cluster

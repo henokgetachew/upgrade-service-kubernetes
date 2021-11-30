@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    // Please only keep relevant options here.
+
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
 
     /* Projects */
