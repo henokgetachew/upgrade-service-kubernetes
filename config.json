@@ -1,0 +1,6 @@
+{
+    "KUBECONFIG_DEFAULT_PATH": "cluster01-kubeconfig.mac.yml",
+    "CHT_DEPLOYMENT_NAME": "cht-test-deployment",
+    "CHT_NAMESPACE_NAME": "cht-test-namespace",
+    "CHT_CONTAINER_NAME": "medic-api"
+}
