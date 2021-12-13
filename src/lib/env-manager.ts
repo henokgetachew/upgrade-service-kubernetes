@@ -5,12 +5,15 @@ export default class Environment {
 
     }
 
-    getDeploymentName(): string {
+    static getDeploymentName(): string {
         return process.env.CHT_DEPLOYMENT_NAME || config.CHT_DEPLOYMENT_NAME;
     }
 
-    getNamespace(): string {
+    static getNamespace(): string {
         return process.env.CHT_NAMESPACE || config.CHT_NAMESPACE_NAME;
     }
 
+    static getKubeConfigPath(): string {
+        return process.env.KUBECONFIG || config.KUBECONFIG_DEFAULT_PATH;
+    }
 }

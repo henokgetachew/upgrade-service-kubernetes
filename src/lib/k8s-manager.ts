@@ -1,40 +1,30 @@
-import k8s, { V1Deployment } from '@kubernetes/client-node';
+import * as k8s from '@kubernetes/client-node';
 import config from '../../config.json';
+import Environment from './env-manager';
 import { IUpgradeMessage } from './upgrade-message';
 
 export default class K8sManager {
     kc: k8s.KubeConfig;
-    k8sCoreV1Api: k8s.CoreV1Api;
-    k8sAppsV1Api: k8s.AppsV1Api;
+    k8sCoreV1Api: k8s.CoreV1Api = new k8s.CoreV1Api();
+    k8sAppsV1Api: k8s.AppsV1Api = new k8s.AppsV1Api();
 
     constructor() {
         this.kc = new k8s.KubeConfig();
         this.setupLinkWithK8Server();
     }
 
-    static getKCPath(): string {
-        const kcPath = process.env.KUBECONFIG || config.KUBECONFIG_DEFAULT_PATH;
-        return kcPath;
-    }
-
     setupKCWithKCPath(): void {
-        const kcPath = K8sManager.getKCPath();
+        const kcPath = Environment.getKubeConfigPath();
         this.kc.loadFromFile(kcPath);
     }
 
-    setupLinkWithK8Server(k8sCoreV1Api?: k8s.CoreV1Api, k8sAppsV1Api?: k8s.AppsV1Api): void {
+    setupLinkWithK8Server(): void {
         if (this.k8sCoreV1Api && this.k8sAppsV1Api) {
             return;
         }
-
-        if (!k8sAppsV1Api && !k8sCoreV1Api) {
-            this.setupKCWithKCPath();
-            this.k8sCoreV1Api = this.kc.makeApiClient(k8s.CoreV1Api);
-            this.k8sAppsV1Api = this.kc.makeApiClient(k8s.AppsV1Api);
-        } else {
-            this.k8sCoreV1Api = k8sCoreV1Api;
-            this.k8sAppsV1Api = k8sAppsV1Api;
-        }
+        this.setupKCWithKCPath();
+        this.k8sCoreV1Api = this.kc.makeApiClient(k8s.CoreV1Api);
+        this.k8sAppsV1Api = this.kc.makeApiClient(k8s.AppsV1Api);
     }
 
     async pullDeploymentObject(k8Deployment: string, namespace: string): Promise<k8s.V1Deployment> {
@@ -42,7 +32,12 @@ export default class K8sManager {
     }
 
     getContainerFromDeploymentObject(deploymentObject: k8s.V1Deployment, containerName: string): k8s.V1Container {
-        return deploymentObject?.spec.template.spec.containers.find(x => x.name == containerName);
+        const container = deploymentObject?.spec?.template?.spec?.containers.find(x => x.name == containerName);
+        if (container) {
+            return container;
+        } else {
+            throw new Error(`Container name: ${containerName} not found in deployment spec.`);
+        }
     }
 
     async pullContainerObject(k8Deployment: string, namespace: string, containerName: string): Promise<k8s.V1Container> {
@@ -56,17 +51,17 @@ export default class K8sManager {
             const imageTag = containerVersionPair.imageTag;
 
             let container: k8s.V1Container = this.getContainerFromDeploymentObject(deploymentObject, containerName);
-            container.image = container?.image.replace(/\:.*/, `:${imageTag}`);
+            container.image = container?.image?.replace(/\:.*/, `:${imageTag}`);
         }
     }
 
-    async upgradeDeploymentContainer(
+    async upgradeDeploymentContainers(
         k8Deployment: string,
         namespace: string,
-        upgradeMessage: IUpgradeMessage[]): Promise<V1Deployment> {
+        upgradeArray: IUpgradeMessage[]): Promise<k8s.V1Deployment> {
 
         let deploymentDetail: k8s.V1Deployment = await this.pullDeploymentObject(k8Deployment, namespace);
-        this.replaceContainerImageForDeployment(deploymentDetail, upgradeMessage);
+        this.replaceContainerImageForDeployment(deploymentDetail, upgradeArray);
         return (await this.k8sAppsV1Api.replaceNamespacedDeployment(k8Deployment, namespace, deploymentDetail))?.body;
     }
 }
