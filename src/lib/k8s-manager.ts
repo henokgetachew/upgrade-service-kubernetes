@@ -1,67 +1,95 @@
 import * as k8s from '@kubernetes/client-node';
-import config from '../../config.json';
 import Environment from './env-manager';
 import { IUpgradeMessage } from './upgrade-message';
-
 export default class K8sManager {
     kc: k8s.KubeConfig;
+    kubeAPIConfigured: boolean = false;
     k8sCoreV1Api: k8s.CoreV1Api = new k8s.CoreV1Api();
     k8sAppsV1Api: k8s.AppsV1Api = new k8s.AppsV1Api();
+    namespace: string;
+    k8sDeploymentName: string;
+    upgradeMessage: IUpgradeMessage[];
+    upgradedDeployments: k8s.V1Deployment[] = [];
 
-    constructor() {
+    constructor(namespace: string, k8sDeploymentName: string, upgradeMessage: IUpgradeMessage[] ) {
         this.kc = new k8s.KubeConfig();
+        this.namespace = namespace;
+        this.k8sDeploymentName = k8sDeploymentName;
+        this.upgradeMessage = upgradeMessage;
+        
         this.setupLinkWithK8Server();
     }
 
     setupKCWithKCPath(): void {
-        const kcPath = Environment.getKubeConfigPath();
-        this.kc.loadFromFile(kcPath);
+        if(Environment.runningWithinCluster()) {
+            this.kc.loadFromCluster();
+        } else {
+            const kcPath = Environment.getKubeConfigPath();
+            this.kc.loadFromFile(kcPath);
+        }
     }
 
     setupLinkWithK8Server(): void {
-        if (this.k8sCoreV1Api && this.k8sAppsV1Api) {
+        if (this.kubeAPIConfigured) {
             return;
         }
         this.setupKCWithKCPath();
         this.k8sCoreV1Api = this.kc.makeApiClient(k8s.CoreV1Api);
         this.k8sAppsV1Api = this.kc.makeApiClient(k8s.AppsV1Api);
+        this.kubeAPIConfigured = true;
     }
 
-    async pullDeploymentObject(k8Deployment: string, namespace: string): Promise<k8s.V1Deployment> {
-        return (await this.k8sAppsV1Api.readNamespacedDeployment(k8Deployment, namespace))?.body;
+    async pullDeploymentObject(): Promise<k8s.V1Deployment> {
+        return (await this.k8sAppsV1Api.readNamespacedDeployment(this.k8sDeploymentName, this.namespace))?.body;
     }
 
-    getContainerFromDeploymentObject(deploymentObject: k8s.V1Deployment, containerName: string): k8s.V1Container {
-        const container = deploymentObject?.spec?.template?.spec?.containers.find(x => x.name == containerName);
+    async getContainerInNamespace(containerName: string): 
+    Promise<{
+        deployment: k8s.V1Deployment,
+        container: k8s.V1Container
+    }> {
+        const deployment: k8s.V1Deployment = await this.pullDeploymentObject();
+        const container = deployment?.spec?.template?.spec?.containers.find(x => x.name == containerName);
         if (container) {
-            return container;
+            return {deployment, container};
         } else {
+            // Look for the container in the other deployments within the same namespace
+            const deployments: k8s.V1DeploymentList = await (await this.k8sAppsV1Api.listNamespacedDeployment(this.namespace)).body;
+            for (const deployment of deployments.items) {
+                const container = deployment?.spec?.template?.spec?.containers.find(x => x.name == containerName);
+                if (container) {
+                    return {deployment, container};
+                }
+            }
             throw new Error(`Container name: ${containerName} not found in deployment spec.`);
         }
     }
 
-    async pullContainerObject(k8Deployment: string, namespace: string, containerName: string): Promise<k8s.V1Container> {
-        const deploymentObject: k8s.V1Deployment = await this.pullDeploymentObject(k8Deployment, namespace);
-        return this.getContainerFromDeploymentObject(deploymentObject, containerName);
-    }
-
-    replaceContainerImageForDeployment(deploymentObject: k8s.V1Deployment, upgradeMessage: IUpgradeMessage[]): void {
-        for(let containerVersionPair of upgradeMessage) {
+    async modifyContainerImageForDeployment(): Promise<k8s.V1Deployment[]> {
+        for(let containerVersionPair of this.upgradeMessage) {
             const containerName = containerVersionPair.containerName;
             const imageTag = containerVersionPair.imageTag;
 
-            let container: k8s.V1Container = this.getContainerFromDeploymentObject(deploymentObject, containerName);
+            let searchResult = await this.getContainerInNamespace(containerName);
+            const deployment = searchResult.deployment;
+            const container = searchResult.container;
             container.image = container?.image?.replace(/\:.*/, `:${imageTag}`);
+            this.upgradedDeployments.push(deployment);
         }
+        return this.upgradedDeployments;
     }
 
-    async upgradeDeploymentContainers(
-        k8Deployment: string,
-        namespace: string,
-        upgradeArray: IUpgradeMessage[]): Promise<k8s.V1Deployment> {
-
-        let deploymentDetail: k8s.V1Deployment = await this.pullDeploymentObject(k8Deployment, namespace);
-        this.replaceContainerImageForDeployment(deploymentDetail, upgradeArray);
-        return (await this.k8sAppsV1Api.replaceNamespacedDeployment(k8Deployment, namespace, deploymentDetail))?.body;
+    async upgradeDeploymentContainers(): Promise<k8s.V1Deployment[]> {
+        let succesfullyUpgraded: k8s.V1Deployment[] = [];
+        await this.modifyContainerImageForDeployment();
+        for (const deployment of this.upgradedDeployments) {
+            let deploymentName: string = "";
+            deploymentName = deployment.metadata?.name ?? "";
+            if (deploymentName != "") {
+                const upgradeResponse = await this.k8sAppsV1Api.replaceNamespacedDeployment(deploymentName, this.namespace, deployment);
+                succesfullyUpgraded.push(upgradeResponse.body);
+            }
+        }
+        return succesfullyUpgraded;
     }
 }

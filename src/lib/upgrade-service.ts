@@ -2,23 +2,30 @@ import Environment from "./env-manager";
 import { IUpgradeMessage } from "./upgrade-message";
 import K8sManager from "./k8s-manager";
 import { V1Deployment } from "@kubernetes/client-node";
-
-const k8sMgr = new K8sManager();
-
 export default class UpgradeService {
 
     upgradeArray: Array<IUpgradeMessage>;
+    k8sMgr: K8sManager;
 
     constructor(upgradeArray: Array<IUpgradeMessage>) {
         this.upgradeArray = upgradeArray;
+        this.k8sMgr = new K8sManager(Environment.getNamespace(), Environment.getDeploymentName(), this.upgradeArray);
     }
 
     getCurrentVersion(container: string): string {
         throw new Error('Not yet implemented');
     }
 
-    upgradeDeployment(): Promise<V1Deployment> {
-        return k8sMgr.upgradeDeploymentContainers(Environment.getDeploymentName(), Environment.getNamespace(), this.upgradeArray);
+    async upgradeDeployment(): Promise<{
+        upgradeResult: UpgradeResult,
+        upgradeCount: number
+    }> {
+        const deployments: V1Deployment[] = await this.k8sMgr.upgradeDeploymentContainers();
+        if (deployments.length > 0 ) {
+            return {upgradeResult: UpgradeResult.Success, upgradeCount: deployments.length}
+        } else {
+            return {upgradeResult: UpgradeResult.Failure, upgradeCount: 0};
+        }
     }
 
     isValidUpgrade(container: string, newVersion: string): string {
