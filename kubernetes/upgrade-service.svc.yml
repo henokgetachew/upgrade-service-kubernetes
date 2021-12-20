@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: archv3-deployment-service
+spec:
+  selector:
+    app: archv3-deployment
+  type: NodePort
+  ports:
+  - name: upgrade-service-port
+    port: 5008
+    targetPort: 5008
+    nodePort: 30008
