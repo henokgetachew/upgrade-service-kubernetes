@@ -1,5 +1,5 @@
 # upgrade-service-kubernetes
-This tool provides an image that you can 
+This tool provides an image that you can use to upgrade your pods in your kubernetes cluster. 
 
 ## Endpoint
 The default port for upgrade-service is `5008`. This can be overridden by setting the environment variable: `UPGRADE_SERVICE_PORT`
