@@ -18,7 +18,7 @@ spec:
       restartPolicy: Always
       serviceAccountName: cht-upgrade-service-user
       containers:
-      - image: medicmobile/upgrade-service:0.14
+      - image: medicmobile/upgrade-service:0.19
         name: upgrade-service
         resources: {}
         env:
@@ -30,4 +30,3 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.labels['app']
-status: {}

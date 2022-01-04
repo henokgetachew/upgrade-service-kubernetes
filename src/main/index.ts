@@ -3,10 +3,12 @@ import * as bodyParser from 'body-parser';
 import {IUpgradeMessage} from '../lib/upgrade-message';
 import UpgradeService from '../lib/upgrade-service';
 import Environment from '../lib/env-manager';
+import cors from 'cors';
 
 const app = express();
 
 app.use(bodyParser.json());
+app.use(cors());
 
 app.get('/upgrade', (req, res) => {
     res.status(200).send({
