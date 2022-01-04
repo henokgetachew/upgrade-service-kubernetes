@@ -1,4 +1,7 @@
-# upgrade-service-kubernetes - create self upgrading deployments
+# upgrade-service-kubernetes
+
+## Create self upgrading deployments
+
 This tool provides an image that you can use to upgrade your pods in your kubernetes cluster. 
 
 ## Endpoint
