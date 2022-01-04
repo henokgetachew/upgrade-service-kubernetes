@@ -7,7 +7,7 @@
     "start": "node src/main/index.js",
     "test": "jest",
     "compile": "tsc",
-    "build-docker-image": "docker build . -t medicmobile/upgrade-service:0.19"
+    "build-docker-image": "docker build . -t medicmobile/upgrade-service:0.20"
   },
   "author": "Henok",
   "license": "ISC",
