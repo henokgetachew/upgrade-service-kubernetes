@@ -54,7 +54,7 @@ export default class K8sManager {
             return {deployment, container};
         } else {
             // Look for the container in the other deployments within the same namespace
-            const deployments: k8s.V1DeploymentList = await (await this.k8sAppsV1Api.listNamespacedDeployment(this.namespace)).body;
+            const deployments: k8s.V1DeploymentList = (await this.k8sAppsV1Api.listNamespacedDeployment(this.namespace)).body;
             for (const deployment of deployments.items) {
                 const container = deployment?.spec?.template?.spec?.containers.find(x => x.name == containerName);
                 if (container) {
@@ -81,6 +81,11 @@ export default class K8sManager {
 
     async upgradeDeploymentContainers(): Promise<k8s.V1Deployment[]> {
         let succesfullyUpgraded: k8s.V1Deployment[] = [];
+        const areDeploymentsReady = await this.areAllDeploymentsInReadyState();
+        if(areDeploymentsReady.ready == false) {
+            throw new Error(`Can't upgrade right now. Container with image: ${areDeploymentsReady.imageNotReady} is in state ${areDeploymentsReady.state}`);
+        }
+
         await this.modifyContainerImageForDeployment();
         for (const deployment of this.upgradedDeployments) {
             let deploymentName: string = "";
@@ -91,5 +96,16 @@ export default class K8sManager {
             }
         }
         return succesfullyUpgraded;
+    }
+
+    async areAllDeploymentsInReadyState(): Promise<{ready: boolean, imageNotReady?: string, state?: k8s.V1ContainerState}> {
+        const pods: k8s.V1PodList = (await this.k8sCoreV1Api.listNamespacedPod(this.namespace)).body;
+        pods.items.forEach((pod) => {
+            const notReadyStatus = pod.status?.containerStatuses?.find(container => container.state != k8s.V1ContainerStateRunning)
+            if(notReadyStatus) {
+                return {ready: false, imageNotReady: notReadyStatus.image, state: notReadyStatus.state};
+            }
+        });
+        return { ready: true, imageNotReady: undefined, state: undefined};
     }
 }

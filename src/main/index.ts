@@ -30,12 +30,28 @@ app.post('/upgrade', async (req: any, res: any) => {
             });
         } else {
             res.status(500).send({
-                message: `Upgrade failed.`
+                message: upgradeResponse.message
             });
         }
     } catch (err: any) {
         res.status(500).send({
             message: `Error: ${err}`
+        });
+    }
+});
+
+app.get('/server-status',async (req: any, res: any) => {
+    const upgradeService = new UpgradeService();
+    const isDeploymentsReady = await upgradeService.isDeploymentReadyForUpgrades();
+    if (isDeploymentsReady.ready) {
+        res.status(200).send({
+            ready: isDeploymentsReady.ready,
+            message: `Deployment is ready for upgrades`
+        });
+    } else {
+        res.status(200).send({
+            ready: isDeploymentsReady.ready,
+            message: `Deployment is not ready for upgrades. Image: ${isDeploymentsReady.imageNotReady} is in State: ${isDeploymentsReady.state}`
         });
     }
 });
