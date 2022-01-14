@@ -1,5 +1,7 @@
 import config from '../../config.json';
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 export default class Environment {
     constructor() {
@@ -12,6 +14,10 @@ export default class Environment {
         } else {
             return false;
         }
+    }
+
+    static runningWithinTestAutomation(): boolean {
+        return (process.env.NODE_ENV === 'test');
     }
 
     static getNamespace(): string {
@@ -30,6 +36,8 @@ export default class Environment {
     static getKubeConfigPath(): string {
         if(Environment.runningWithinCluster()) {
             throw new Error('Runing within cluster. Load config from cluster.');
+        } else if (Environment.runningWithinTestAutomation()) { 
+            return path.join(os.homedir(), '.kube/config');
         } else {
             return process.env.KUBECONFIG || config.KUBECONFIG_DEFAULT_PATH;
         }

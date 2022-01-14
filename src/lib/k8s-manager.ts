@@ -65,7 +65,7 @@ export default class K8sManager {
         }
     }
 
-    async modifyContainerImageForDeployment(): Promise<k8s.V1Deployment[]> {
+    private async modifyContainerImageForDeployment(): Promise<k8s.V1Deployment[]> {
         for(let containerVersionPair of this.upgradeMessage) {
             const containerName = containerVersionPair.containerName;
             const imageTag = containerVersionPair.imageTag;
@@ -100,9 +100,10 @@ export default class K8sManager {
 
     async areAllDeploymentsInReadyState(): Promise<{ready: boolean, imageNotReady?: string, state?: k8s.V1ContainerState}> {
         const pods: k8s.V1PodList = (await this.k8sCoreV1Api.listNamespacedPod(this.namespace)).body;
+
         pods.items.forEach((pod) => {
-            const notReadyStatus = pod.status?.containerStatuses?.find(container => container.state != k8s.V1ContainerStateRunning)
-            if(notReadyStatus) {
+            const notReadyStatus = pod.status?.containerStatuses?.find(container => container.state != k8s.V1ContainerStateRunning);
+            if(notReadyStatus?.name != undefined) {
                 return {ready: false, imageNotReady: notReadyStatus.image, state: notReadyStatus.state};
             }
         });
