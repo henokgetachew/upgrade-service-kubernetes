@@ -1,23 +1,23 @@
 import { V1Container, V1Deployment } from '@kubernetes/client-node';
-import k8sManager from '../lib/k8s-manager';
 import K8sManager from '../lib/k8s-manager';
 import { IUpgradeMessage } from '../lib/upgrade-message';
 import { runCommand } from '../utils/command-exec';
-
-const tempCluster = 'temporary-test-cluster';
-const tempNamespace = 'k8s-cht-deployment';
-const k8s_deployment_name = 'archv3-deployment';
+import { k8s_deployment_name, tempNamespace } from '../resources/test-constants';
 
 
 describe('k8s-manager', () => {
 
+    beforeAll(async () => {
+        await runCommand(`kubectl apply -f src/resources/nginx.default.yaml`, 'Creating an nginx deployment in the default namespace');
+        await runCommand(`kubectl -n ${tempNamespace} apply -f src/resources/nginx.yaml`, 'Creating an nginx deployment');
+    });
+
     it('Role Based Access Policy Works', async () => {
         /*
-        We use different namespaces to confirm. We deploy the next deployment without specifying
-        the namespace. That should mean upgrades targeting it should fail.
+        We shouldn't be able to upgrade deployments in different namespaces.
         */
-        await runCommand(`kubectl create deployment nginx --image=nginx`, 'Creating an nginx deployment');
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.20'}];
+
+        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx-default', imageTag: '1.20'}];
         const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
         let errMessage: any = undefined;
         
@@ -32,14 +32,13 @@ describe('k8s-manager', () => {
     }, 50000);
 
     it('Version upgrades work as intended', async () => {
-        await runCommand(`kubectl create deployment -n ${tempNamespace} nginx --image=nginx:1.21`, 'Creating an nginx deployment');
         const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
         const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
         await k8sMgr.upgradeDeploymentContainers();
-        const response = await k8sMgr.getContainerInNamespace('nginx');
+        const version = await k8sMgr.getCurrentVersion('nginx');
 
-        expect(response.container.image).toContain('1.19');
+        expect(version).toContain('1.19');
     });
 
     it('Can pull deployment object', async () => {

@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-default
+  name: nginx-default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-default
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nginx-default
+    spec:
+      containers:
+      - image: "nginx:1.20"
+        name: nginx-default
+        resources: {}
