@@ -109,4 +109,9 @@ export default class K8sManager {
         });
         return { ready: true, imageNotReady: undefined, state: undefined};
     }
+
+    async getCurrentVersion(container: string): Promise<string> {
+        const response = await this.getContainerInNamespace(container);
+        return response.container.image ?? 'Not found';
+    }
 }

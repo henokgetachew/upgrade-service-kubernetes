@@ -8,13 +8,13 @@ export default class UpgradeService {
     upgradeArray: Array<IUpgradeMessage>;
     k8sMgr: K8sManager;
 
-    constructor(upgradeArray?: Array<IUpgradeMessage>) {
+    constructor(upgradeArray?: Array<IUpgradeMessage>, namespace?: string, deploymentName?: string) {
         this.upgradeArray = upgradeArray || [];
-        this.k8sMgr = new K8sManager(Environment.getNamespace(), Environment.getDeploymentName(), this.upgradeArray);
+        this.k8sMgr = new K8sManager(namespace || Environment.getNamespace(), deploymentName || Environment.getDeploymentName(), this.upgradeArray);
     }
 
-    getCurrentVersion(container: string): string {
-        throw new Error('Not yet implemented');
+    async getCurrentVersion(container: string): Promise<string> {
+        return this.k8sMgr.getCurrentVersion(container);
     }
 
     async upgradeDeployment(): Promise<{
