@@ -6,6 +6,7 @@ import { k8s_deployment_name, tempNamespace } from "../resources/test-constants"
 
 beforeAll(async () => {
     await runCommand(`kubectl -n ${tempNamespace} apply -f src/resources/busybox.yaml`, 'Creating a busybox deployment');
+    await runCommand(`sleep 2`, 'Waiting a few seconds...');
 });
 
 describe('Upgrade Service', () => {

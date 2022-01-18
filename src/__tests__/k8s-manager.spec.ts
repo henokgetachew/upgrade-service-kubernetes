@@ -10,6 +10,7 @@ describe('k8s-manager', () => {
     beforeAll(async () => {
         await runCommand(`kubectl apply -f src/resources/nginx.default.yaml`, 'Creating an nginx deployment in the default namespace');
         await runCommand(`kubectl -n ${tempNamespace} apply -f src/resources/nginx.yaml`, 'Creating an nginx deployment');
+        await runCommand(`sleep 2`, 'Waiting a few seconds...');
     });
 
     it('Role Based Access Policy Works', async () => {
