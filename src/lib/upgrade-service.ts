@@ -35,23 +35,7 @@ export default class UpgradeService {
         }
     }
 
-    isDeploymentReadyForUpgrades(): Promise<{ready: boolean, imageNotReady?: string, state?: V1ContainerState}> {
+    isDeploymentReadyForUpgrades(): Promise<{ready: boolean, imageNotReady?: string, state?: string}> {
         return this.k8sMgr.areAllDeploymentsInReadyState();
-    }
-
-    isValidUpgrade(container: string, newVersion: string): string {
-        throw new Error('Not yet implemented');
-    }
-
-    restartServices(): void {
-        throw new Error('Not yet implemented');
-    }
-
-    wasUpgradeSuccessful(container: string): string {
-        throw new Error('Not yet implemented');
-    }
-
-    commitNewYAMLConfigToGitHub(): boolean {
-        throw new Error('Not yet implemented');
     }
 }

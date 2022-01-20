@@ -1,4 +1,5 @@
 import * as k8s from '@kubernetes/client-node';
+import { V1PodStatus } from '@kubernetes/client-node';
 import Environment from './env-manager';
 import { IUpgradeMessage } from './upgrade-message';
 export default class K8sManager {
@@ -98,15 +99,17 @@ export default class K8sManager {
         return succesfullyUpgraded;
     }
 
-    async areAllDeploymentsInReadyState(): Promise<{ready: boolean, imageNotReady?: string, state?: k8s.V1ContainerState}> {
+    async areAllDeploymentsInReadyState(): Promise<{ready: boolean, imageNotReady?: string, state?: string}> {
         const pods: k8s.V1PodList = (await this.k8sCoreV1Api.listNamespacedPod(this.namespace)).body;
-
-        pods.items.forEach((pod) => {
+        for(let p=0; p < pods.items.length; p++) {
+            const pod = pods.items[p];
             const notReadyStatus = pod.status?.containerStatuses?.find(container => container.state != k8s.V1ContainerStateRunning);
-            if(notReadyStatus?.name != undefined) {
-                return {ready: false, imageNotReady: notReadyStatus.image, state: notReadyStatus.state};
+            const pendingStatus = pod.status?.phase === 'Pending';
+            if(notReadyStatus?.name != undefined || pendingStatus) {
+                return {ready: false, imageNotReady: pod.metadata?.name, state: pod.status?.phase};
             }
-        });
+        }
+
         return { ready: true, imageNotReady: undefined, state: undefined};
     }
 
