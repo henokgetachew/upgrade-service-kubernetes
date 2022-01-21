@@ -2,6 +2,8 @@
 
 ## Create self upgrading deployments
 
+[![Tests](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/main.yml)
+
 This tool provides an image that you can use to upgrade your pods in your kubernetes cluster. 
 
 ## Endpoint
