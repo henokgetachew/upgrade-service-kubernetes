@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - uses: AbsaOSS/k3d-action@v2
-        name: "Create a k3d Cluster"
+        name: "Create a kubernetes cluster"
         with:
           cluster-name: "temporary-test-cluster"
           args: >-
@@ -29,8 +29,8 @@ jobs:
         with:
           node-version: 16.x
 
-      - name: Install dependencies
+      - name: Install required dependencies
         run: npm ci
 
-      - name: Run the tests
+      - name: Run tests
         run: npm run test-on-pre-existing-cluster
