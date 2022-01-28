@@ -19,3 +19,4 @@ ADD . /usr/src/app
 RUN npm run compile
 CMD [ "npm", "start" ]
 EXPOSE 5008
+
