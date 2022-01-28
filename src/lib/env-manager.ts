@@ -10,6 +10,7 @@ export default class Environment {
 
     static runningWithinCluster(): boolean {
         if(fs.existsSync('/var/run/secrets/kubernetes.io/serviceaccount/token')) {
+
             return true;
         } else {
             return false;
@@ -36,7 +37,7 @@ export default class Environment {
     static getKubeConfigPath(): string {
         if(Environment.runningWithinCluster()) {
             throw new Error('Runing within cluster. Load config from cluster.');
-        } else if (Environment.runningWithinTestAutomation()) { 
+        } else if (Environment.runningWithinTestAutomation()) {
             return path.join(os.homedir(), '.kube/config');
         } else {
             return process.env.KUBECONFIG || config.KUBECONFIG_DEFAULT_PATH;
@@ -47,6 +48,6 @@ export default class Environment {
         const port = process.env.UPGRADE_SERVICE_PORT || 5008;
         console.log(port);
         return port;
-        
+
     }
 }
