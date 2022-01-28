@@ -35,14 +35,11 @@ export default class Environment {
     }
 
     static getKubeConfigPath(): string {
-        if(Environment.runningWithinCluster()) {
+        if (Environment.runningWithinCluster()) {
             throw new Error('Runing within cluster. Load config from cluster.');
-
         } else if (Environment.runningWithinTestAutomation()) {
-
             return path.join(os.homedir(), '.kube/config');
         } else {
-
             return process.env.KUBECONFIG || config.KUBECONFIG_DEFAULT_PATH;
         }
     }
