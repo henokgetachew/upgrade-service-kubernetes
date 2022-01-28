@@ -10,7 +10,6 @@ export default class Environment {
 
     static runningWithinCluster(): boolean {
         if(fs.existsSync('/var/run/secrets/kubernetes.io/serviceaccount/token')) {
-
             return true;
         } else {
             return false;
@@ -24,6 +23,7 @@ export default class Environment {
     static getNamespace(): string {
         let namespace: string = "";
         namespace = process.env.CHT_NAMESPACE || config.CHT_NAMESPACE;
+
         if(namespace == "" && Environment.runningWithinCluster()) {
             namespace = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace').toString();
         }
