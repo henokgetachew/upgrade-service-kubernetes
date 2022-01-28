@@ -23,7 +23,7 @@ jobs:
             --agents 1
 
       - uses: actions/checkout@v2
-      
+
       - name: Use Node.js 16.x
         uses: actions/setup-node@v1
         with:
@@ -34,3 +34,4 @@ jobs:
 
       - name: Run tests
         run: npm run test-on-pre-existing-cluster
+
