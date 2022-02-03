@@ -1,17 +1,18 @@
-FROM node:17.2.0-alpine3.12
+FROM node:lts-alpine
 LABEL maintainer "Henok G. Alemayehu henok@medic.org"
 
-ENV TIME_ZONE=Africa/Addis_Ababa
+ENV TIME_ZONE=Etc/UTC
 
 RUN apk --update add tzdata && \
-    cp /usr/share/zoneinfo/Africa/Addis_Ababa /etc/localtime && \
-    echo "Africa/Addis_Ababa" > /etc/timezone && \
+    cp /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+    echo "Etc/UTC" > /etc/timezone && \
     apk del tzdata
 
 WORKDIR /usr/src/app
 COPY package.json .
+COPY package-lock.json .
 
-RUN npm install
+RUN npm ci
 ADD . /usr/src/app
 
 RUN npm run compile
