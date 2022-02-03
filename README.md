@@ -75,3 +75,13 @@ You should get the response from the server stating that upgrade succeeded.
 `{"message":"Successfuly upgraded 1 containers"}`
 
 Confirm that the nginx pod is now using image `1.21`.
+
+## Environment Variables Overwrite Available
+
+These don't need to be set - the kubernetes setup picks them up automatically. However, if you need to overwrite any of the environment variables for whatever reason, you can use the `config.json` file. It contains the following variables:
+```
+    "KUBECONFIG_DEFAULT_PATH": "",
+    "CHT_DEPLOYMENT_NAME": "",
+    "CHT_NAMESPACE": ""
+```
+It's a good idea to not change these settings unless you know what you're doing.
