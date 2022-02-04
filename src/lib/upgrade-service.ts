@@ -3,6 +3,7 @@ import { IUpgradeMessage } from "./upgrade-message";
 import K8sManager from "./k8s-manager";
 import { V1Deployment } from "@kubernetes/client-node";
 import { V1ContainerState } from '@kubernetes/client-node';
+import { UpgradeResult } from "./upgrade-result";
 export default class UpgradeService {
 
     upgradeArray: Array<IUpgradeMessage>;

@@ -3,6 +3,7 @@ import * as bodyParser from 'body-parser';
 import {IUpgradeMessage} from '../lib/upgrade-message';
 import UpgradeService from '../lib/upgrade-service';
 import Environment from '../lib/env-manager';
+import {UpgradeResult} from '../lib/upgrade-result';
 import cors from 'cors';
 
 const app = express();
