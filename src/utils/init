@@ -1,9 +1,10 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-var-requires */
 
-import { initialize } from './setup-cluster';
+const setupCluster = require('./setup-cluster');
 
 const run = async () => {
-    await initialize();
+    await setupCluster.initialize();
 };
 
 run();

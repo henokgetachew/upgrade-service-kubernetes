@@ -3,7 +3,7 @@ import fs from 'fs';
 
 describe('env-manager', () => {
     it('Default upgrade service port is 5008', () => {
-        expect(Environment.getUpgradeServicePort()).toBe(5008);
+        expect(Environment.getUpgradeServicePort()).toBe('5008');
     });
 
     it('Default upgrade service port can be overridden', () => {

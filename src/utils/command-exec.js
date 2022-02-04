@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-console */
-import { exec } from 'child_process';
+const { exec } = require('child_process');
 
 const runCommand = async function (command, statusUpdate) {
     return new Promise((resolve, reject) => {
@@ -20,6 +21,6 @@ const runCommand = async function (command, statusUpdate) {
     });
 };
 
-export default {
+module.exports = {
     runCommand
 };

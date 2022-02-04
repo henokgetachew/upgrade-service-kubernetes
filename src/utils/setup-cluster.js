@@ -1,4 +1,5 @@
-import { runCommand } from './command-exec';
+/* eslint-disable @typescript-eslint/no-var-requires */
+const {runCommand} = require('./command-exec');
 
 const tempCluster = 'temporary-test-cluster';
 const tempNamespace = 'k8s-cht-deployment';
@@ -21,7 +22,7 @@ const destroy = async () => {
     await runCommand('k3d cluster delete temporary-test-cluster', 'Deleting temporary test cluster...');
 };
 
-export default {
+module.exports = {
     initialize,
     destroy,
     initializeAssumeClusterAlreadyExists
