@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/main/index.js",
+    "start": "npx ts-node src/main/index.ts",
     "test": "./src/utils/init && jest || true && ./src/utils/destroy || true",
     "test-on-pre-existing-cluster": "./src/utils/init-assume-cluster-exists && jest",
     "coverage": "./src/utils/init && jest --coverage || true && ./src/utils/destroy || true",
@@ -17,7 +17,8 @@
     "@kubernetes/client-node": "^0.16.1",
     "@types/node": "^17.0.8",
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "ts-node": "^10.4.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
