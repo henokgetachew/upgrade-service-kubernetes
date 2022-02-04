@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const setupCluster = require('./setup-cluster');
+import { initializeAssumeClusterAlreadyExists } from './setup-cluster';
 
 const run = async () => {
-    await setupCluster.initializeAssumeClusterAlreadyExists();
-}
+    await initializeAssumeClusterAlreadyExists();
+};
 
 run();

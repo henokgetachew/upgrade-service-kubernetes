@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const setupCluster = require('./setup-cluster');
+import { initialize } from './setup-cluster';
 
 const run = async () => {
-    await setupCluster.initialize();
-}
+    await initialize();
+};
 
 run();

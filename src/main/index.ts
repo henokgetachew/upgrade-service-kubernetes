@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import express from 'express';
 import * as bodyParser from 'body-parser';
 import {IUpgradeMessage} from '../lib/upgrade-message';
@@ -25,7 +27,7 @@ app.post('/upgrade', async (req: any, res: any) => {
         const upgradeArr: Array<IUpgradeMessage> = req.body;
         const upgradeService = new UpgradeService(upgradeArr);
         const upgradeResponse = await upgradeService.upgradeDeployment();
-        if(upgradeResponse.upgradeResult == UpgradeResult.Success) {
+        if(upgradeResponse.upgradeResult === UpgradeResult.Success) {
             res.status(200).send({
                 message: `Successfuly upgraded ${upgradeResponse.upgradeCount} containers`
             });
@@ -52,10 +54,13 @@ app.get('/server-status',async (req: any, res: any) => {
     } else {
         res.status(200).send({
             ready: isDeploymentsReady.ready,
-            message: `Deployment is not ready for upgrades. Image: ${isDeploymentsReady.imageNotReady} is in State: ${isDeploymentsReady.state}`
+            message: `Deployment is not ready for upgrades.
+              Image: ${isDeploymentsReady.imageNotReady} is in State: ${isDeploymentsReady.state}`
         });
     }
 });
 
 const port = Environment.getUpgradeServicePort();
+console.log(`Listening on port ${port}`);
+
 app.listen(port);

@@ -1,5 +1,5 @@
-import Environment from "../lib/env-manager";
-import fs from "fs";
+import Environment from '../lib/env-manager';
+import fs from 'fs';
 
 describe('env-manager', () => {
     it('Default upgrade service port is 5008', () => {

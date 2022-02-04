@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { V1Container, V1Deployment } from '@kubernetes/client-node';
 import K8sManager from '../lib/k8s-manager';
 import { IUpgradeMessage } from '../lib/upgrade-message';
@@ -8,8 +9,11 @@ import { k8s_deployment_name, tempNamespace } from '../resources/test-constants'
 describe('k8s-manager', () => {
 
     beforeAll(async () => {
-        await runCommand(`kubectl apply -f src/resources/nginx.default.yaml`, 'Creating an nginx deployment in the default namespace');
-        await runCommand(`kubectl -n ${tempNamespace} apply -f src/resources/nginx.yaml`, 'Creating an nginx deployment');
+        await runCommand(
+            `kubectl apply -f src/resources/nginx.default.yaml`,
+            'Creating an nginx deployment in the default namespace');
+        await runCommand(
+            `kubectl -n ${tempNamespace} apply -f src/resources/nginx.yaml`, 'Creating an nginx deployment');
         await runCommand(`sleep 2`, 'Waiting a few seconds...');
     });
 
@@ -36,7 +40,9 @@ describe('k8s-manager', () => {
         const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
         const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        k8sMgr.areAllDeploymentsInReadyState = jest.fn(() => new Promise((resolve) => resolve({ready: true, imageNotReady: undefined, state: undefined})));
+        k8sMgr.areAllDeploymentsInReadyState = jest.fn(() => new Promise(
+            (resolve) => resolve({ready: true, imageNotReady: undefined, state: undefined})
+        ));
 
         await k8sMgr.upgradeDeploymentContainers();
         const version = await k8sMgr.getCurrentVersion('nginx');
@@ -54,7 +60,9 @@ describe('k8s-manager', () => {
     });
 
     it('Can pull container in namespace', async () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'upgrade-service', imageTag: 'some-tag-doesnt-matter-here'}];
+        const upgradeMessageArray: IUpgradeMessage[] = [
+            {containerName: 'upgrade-service', imageTag: 'some-tag-doesnt-matter-here'}
+        ];
         const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
         const response = await k8sMgr.getContainerInNamespace('upgrade-service');

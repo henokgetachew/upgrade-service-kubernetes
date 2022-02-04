@@ -4,9 +4,6 @@ import path from 'path';
 import os from 'os';
 
 export default class Environment {
-    constructor() {
-
-    }
 
     static runningWithinCluster(): boolean {
         if(fs.existsSync('/var/run/secrets/kubernetes.io/serviceaccount/token')) {
@@ -21,9 +18,9 @@ export default class Environment {
     }
 
     static getNamespace(): string {
-        let namespace: string = "";
+        let namespace = '';
         namespace = process.env.CHT_NAMESPACE || config.CHT_NAMESPACE;
-        if(namespace == "" && Environment.runningWithinCluster()) {
+        if(namespace === '' && Environment.runningWithinCluster()) {
             namespace = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace').toString();
         }
         return namespace;
@@ -43,9 +40,8 @@ export default class Environment {
         }
     }
 
-    static getUpgradeServicePort(): any {
-        const port = process.env.UPGRADE_SERVICE_PORT || 5008;
-        console.log(port);
+    static getUpgradeServicePort(): string {
+        const port = process.env.UPGRADE_SERVICE_PORT || '5008';
         return port;
         
     }

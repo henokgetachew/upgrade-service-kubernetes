@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const setupCluster = require('./setup-cluster');
+import { destroy } from './setup-cluster';
 
 const run = async () => {
-    await setupCluster.destroy();
-}
+    await destroy();
+};
 
 run();
