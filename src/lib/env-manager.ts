@@ -19,11 +19,7 @@ export default class Environment {
     }
 
     static runningWithinCluster(): boolean {
-        if(fs.existsSync('/var/run/secrets/kubernetes.io/serviceaccount/token')) {
-            return true;
-        } else {
-            return false;
-        }
+        return fs.existsSync('/var/run/secrets/kubernetes.io/serviceaccount/token');
     }
 
     static runningWithinTestAutomation(): boolean {
@@ -56,11 +52,11 @@ export default class Environment {
     static getKubeConfigPath(): string | undefined {
         if(Environment.runningWithinCluster()) {
             throw new Error('Runing within cluster. Load config from cluster.');
-        } else if (Environment.runningWithinTestAutomation()) { 
-            return path.join(os.homedir(), '.kube/config');
-        } else {
-            return process.env.KUBECONFIG || Environment.localConfig()?.KUBECONFIG_DEFAULT_PATH;
         }
+        if (Environment.runningWithinTestAutomation()) {
+            return path.join(os.homedir(), '.kube/config');
+        }
+        return process.env.KUBECONFIG || Environment.localConfig()?.KUBECONFIG_DEFAULT_PATH;
     }
 
     static getUpgradeServicePort(): string {
