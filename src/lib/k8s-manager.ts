@@ -25,7 +25,11 @@ export default class K8sManager {
             this.kc.loadFromCluster();
         } else {
             const kcPath = Environment.getKubeConfigPath();
-            this.kc.loadFromFile(kcPath);
+            if (kcPath) {
+                this.kc.loadFromFile(kcPath);
+            } else {
+                throw new Error('Could not load kube config.');
+            }
         }
     }
 
