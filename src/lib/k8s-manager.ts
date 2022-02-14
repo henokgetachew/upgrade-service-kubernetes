@@ -110,13 +110,13 @@ export default class K8sManager {
     }
 
     async areAllDeploymentsInReadyState(): Promise<{ready: boolean,
-        podsNotReady?: Array<{podNotReady: string | undefined,
-          state?: string | undefined,
-          containersNotReady: V1ContainerStatus[] | undefined}>}> {
+        podsNotReady?: Array<{podNotReady?: string,
+          state?: string,
+          containersNotReady?: V1ContainerStatus[]}>}> {
 
         const pods: k8s.V1PodList = (await this.k8sCoreV1Api.listNamespacedPod(this.namespace)).body;
-        const podsNotReady: Array<{podNotReady: string | undefined,
-            state?: string | undefined, containersNotReady: V1ContainerStatus[] | undefined}> = [];
+        const podsNotReady: Array<{podNotReady?: string,
+            state?: string, containersNotReady?: V1ContainerStatus[]}> = [];
 
         pods.items.forEach((pod => {
             const notReadyContainers = pod.status?.containerStatuses?.filter(
