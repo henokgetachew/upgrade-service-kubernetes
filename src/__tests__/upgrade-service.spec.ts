@@ -27,7 +27,7 @@ describe('Upgrade Service', () => {
         const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
         upgradeService.k8sMgr.areAllDeploymentsInReadyState = jest.fn(() => new Promise(
-            (resolve) => resolve({ ready: true, imageNotReady: undefined, state: undefined })
+            (resolve) => resolve({ ready: true, podsNotReady: undefined })
         ));
         await upgradeService.upgradeDeployment();
 

@@ -1,4 +1,5 @@
 import * as k8s from '@kubernetes/client-node';
+import { V1ContainerStatus } from '@kubernetes/client-node';
 import Environment from './env-manager';
 import { IUpgradeMessage } from './upgrade-message';
 
@@ -93,7 +94,7 @@ export default class K8sManager {
         const areDeploymentsReady = await this.areAllDeploymentsInReadyState();
         if(!areDeploymentsReady.ready) {
             throw new Error(`Can't upgrade right now.
-              Container with image: ${areDeploymentsReady.imageNotReady} is in state ${areDeploymentsReady.state}`);
+              The following pods are not ready.: ${JSON.stringify(areDeploymentsReady.podsNotReady)}`);
         }
 
         await this.modifyContainerImageForDeployment();
@@ -108,19 +109,31 @@ export default class K8sManager {
         return succesfullyUpgraded;
     }
 
-    async areAllDeploymentsInReadyState(): Promise<{ready: boolean, imageNotReady?: string, state?: string}> {
+    async areAllDeploymentsInReadyState(): Promise<{ready: boolean,
+        podsNotReady?: Array<{podNotReady: string | undefined,
+          state?: string | undefined,
+          containersNotReady: V1ContainerStatus[] | undefined}>}> {
+
         const pods: k8s.V1PodList = (await this.k8sCoreV1Api.listNamespacedPod(this.namespace)).body;
-        for(let p=0; p < pods.items.length; p++) {
-            const pod = pods.items[p];
-            const notReadyStatus = pod.status?.containerStatuses?.find(
+        const podsNotReady: Array<{podNotReady: string | undefined,
+            state?: string | undefined, containersNotReady: V1ContainerStatus[] | undefined}> = [];
+
+        pods.items.forEach((pod => {
+            const notReadyContainers = pod.status?.containerStatuses?.filter(
                 container => container.state !== k8s.V1ContainerStateRunning);
             const pendingStatus = pod.status?.phase === 'Pending';
-            if(notReadyStatus?.name !== undefined || pendingStatus) {
-                return {ready: false, imageNotReady: pod.metadata?.name, state: pod.status?.phase};
+            if(notReadyContainers?.length || pendingStatus) {
+                podsNotReady.push(
+                    {podNotReady: pod.metadata?.name, state: pod.status?.phase, containersNotReady: notReadyContainers}
+                );
             }
+        }));
+
+        if(podsNotReady.length) {
+            return {ready: false, podsNotReady: podsNotReady};
         }
 
-        return { ready: true, imageNotReady: undefined, state: undefined};
+        return { ready: true, podsNotReady: undefined};
     }
 
     async getCurrentVersion(container: string): Promise<string> {

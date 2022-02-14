@@ -41,7 +41,7 @@ describe('k8s-manager', () => {
         const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
         k8sMgr.areAllDeploymentsInReadyState = jest.fn(() => new Promise(
-            (resolve) => resolve({ready: true, imageNotReady: undefined, state: undefined})
+            (resolve) => resolve({ready: true, podsNotReady: undefined})
         ));
 
         await k8sMgr.upgradeDeploymentContainers();
