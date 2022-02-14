@@ -133,7 +133,7 @@ export default class K8sManager {
             return {ready: false, podsNotReady: podsNotReady};
         }
 
-        return { ready: true, podsNotReady: undefined};
+        return { ready: true};
     }
 
     async getCurrentVersion(container: string): Promise<string> {
