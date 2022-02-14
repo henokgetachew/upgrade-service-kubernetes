@@ -1,6 +1,7 @@
 import * as k8s from '@kubernetes/client-node';
 import Environment from './env-manager';
 import { IUpgradeMessage } from './upgrade-message';
+
 export default class K8sManager {
     kc: k8s.KubeConfig;
     kubeAPIConfigured = false;
@@ -16,7 +17,7 @@ export default class K8sManager {
         this.namespace = namespace;
         this.k8sDeploymentName = k8sDeploymentName;
         this.upgradeMessage = upgradeMessage;
-        
+
         this.setupLinkWithK8Server();
     }
 
@@ -90,16 +91,15 @@ export default class K8sManager {
     async upgradeDeploymentContainers(): Promise<k8s.V1Deployment[]> {
         const succesfullyUpgraded: k8s.V1Deployment[] = [];
         const areDeploymentsReady = await this.areAllDeploymentsInReadyState();
-        if(areDeploymentsReady.ready === false) {
+        if(!areDeploymentsReady.ready) {
             throw new Error(`Can't upgrade right now.
               Container with image: ${areDeploymentsReady.imageNotReady} is in state ${areDeploymentsReady.state}`);
         }
 
         await this.modifyContainerImageForDeployment();
         for (const deployment of this.upgradedDeployments) {
-            let deploymentName = '';
-            deploymentName = deployment.metadata?.name ?? '';
-            if (deploymentName !== '') {
+            const deploymentName = deployment.metadata?.name;
+            if (deploymentName) {
                 const upgradeResponse = await this.k8sAppsV1Api
                     .replaceNamespacedDeployment(deploymentName, this.namespace, deployment);
                 succesfullyUpgraded.push(upgradeResponse.body);
