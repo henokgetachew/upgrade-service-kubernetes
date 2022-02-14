@@ -11,8 +11,8 @@ export default class UpgradeService {
 
     constructor(upgradeArray?: Array<IUpgradeMessage>, namespace?: string, deploymentName?: string) {
         this.upgradeArray = upgradeArray || [];
-        this.k8sMgr = new K8sManager(namespace || 
-            Environment.getNamespace(), deploymentName || 
+        this.k8sMgr = new K8sManager(namespace ||
+            Environment.getNamespace(), deploymentName ||
             Environment.getDeploymentName(), this.upgradeArray);
     }
 
@@ -45,6 +45,8 @@ export default class UpgradeService {
             return this.upgradeFailure();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch(err: any){
+            // eslint-disable-next-line no-console
+            console.error('Error while upgrading deployment containers', err);
             return this.upgradeFailure(err.toString());
         }
     }
