@@ -10,11 +10,11 @@ import cors from 'cors';
 
 const app = express();
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '1mb', type: 'application/json'}));
 app.use(cors());
 
-app.get('/upgrade', (req, res) => {
-    res.status(200).send({
+app.get('/', (req, res) => {
+    res.status(200).json({
         message: 'Upgrade service working.'
     });
 });
