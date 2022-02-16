@@ -28,16 +28,18 @@ app.post('/upgrade', async (req: any, res: any) => {
         const upgradeService = new UpgradeService(upgradeArr);
         const upgradeResponse = await upgradeService.upgradeDeployment();
         if(upgradeResponse.upgradeResult === UpgradeResult.Success) {
-            res.status(200).send({
+            res.status(200).json({
                 message: `Successfuly upgraded ${upgradeResponse.upgradeCount} containers`
             });
-        } else {
-            res.status(500).send({
-                message: upgradeResponse.message
-            });
         }
+
+        console.error('Error during upgrade.', upgradeResponse.message);
+        res.status(500).json({
+            message: upgradeResponse.message
+        });
     } catch (err: any) {
-        res.status(500).send({
+        console.error('Error during upgrade', err);
+        res.status(500).json({
             message: `Error: ${err}`
         });
     }
@@ -47,17 +49,17 @@ app.get('/server-status',async (req: any, res: any) => {
     const upgradeService = new UpgradeService();
     const isDeploymentsReady = await upgradeService.isDeploymentReadyForUpgrades();
     if (isDeploymentsReady.ready) {
-        res.status(200).send({
+        res.status(200).json({
             ready: isDeploymentsReady.ready,
             message: `Deployment is ready for upgrades`
         });
-    } else {
-        res.status(200).send({
-            ready: isDeploymentsReady.ready,
-            message: `Deployment is not ready for upgrades.
-              Image: ${isDeploymentsReady.imageNotReady} is in State: ${isDeploymentsReady.state}`
-        });
     }
+
+    res.status(200).json({
+        ready: isDeploymentsReady.ready,
+        message: `Deployment is not ready for upgrades.
+            Not Ready: ${JSON.stringify(isDeploymentsReady.podsNotReady)}`
+    });
 });
 
 const port = Environment.getUpgradeServicePort();
