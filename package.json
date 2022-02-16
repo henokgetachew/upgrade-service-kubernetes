@@ -8,7 +8,7 @@
     "test": "./src/utils/init && jest || true && ./src/utils/destroy || true",
     "test-on-pre-existing-cluster": "./src/utils/init-assume-cluster-exists && jest",
     "coverage": "./src/utils/init && jest --coverage || true && ./src/utils/destroy || true",
-    "build-docker-image": "docker build . -t medicmobile/upgrade-service:0.23"
+    "build-docker-image": "docker build . -t medicmobile/upgrade-service:0.24"
   },
   "author": "Henok",
   "license": "ISC",
