@@ -3,17 +3,17 @@ import { V1Container, V1Deployment } from '@kubernetes/client-node';
 import K8sManager from '../lib/k8s-manager';
 import { IUpgradeMessage } from '../lib/upgrade-message';
 import { runCommand } from '../utils/command-exec';
-import { k8s_deployment_name, tempNamespace } from '../resources/test-constants';
+import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
 
 
 describe('k8s-manager', () => {
 
     beforeAll(async () => {
         await runCommand(
-            `kubectl apply -f src/resources/nginx.default.yaml`,
+            `kubectl apply -f src/__tests__/resources/nginx.default.yaml`,
             'Creating an nginx deployment in the default namespace');
         await runCommand(
-            `kubectl -n ${tempNamespace} apply -f src/resources/nginx.yaml`, 'Creating an nginx deployment');
+            `kubectl -n ${tempNamespace} apply -f src/__tests__/resources/nginx.yaml`, 'Creating an nginx deployment');
         await runCommand(`sleep 2`, 'Waiting a few seconds...');
     });
 

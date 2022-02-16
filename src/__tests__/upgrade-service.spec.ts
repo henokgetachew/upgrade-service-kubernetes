@@ -1,13 +1,13 @@
 import { IUpgradeMessage } from '../lib/upgrade-message';
 import { runCommand } from '../utils/command-exec';
 import UpgradeService from '../lib/upgrade-service';
-import { k8s_deployment_name, tempNamespace } from '../resources/test-constants';
+import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
 import { UpgradeResult } from '../lib/upgrade-result';
 
 
 beforeAll(async () => {
     await runCommand(
-        `kubectl -n ${tempNamespace} apply -f src/resources/busybox.yaml`,
+        `kubectl -n ${tempNamespace} apply -f src/__tests__/resources/busybox.yaml`,
         'Creating a busybox deployment');
     await runCommand(`sleep 2`, 'Waiting a few seconds...');
 });
