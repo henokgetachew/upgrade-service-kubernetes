@@ -20,6 +20,16 @@ export default class K8sManager {
         this.upgradeMessage = upgradeMessage;
 
         this.setupLinkWithK8Server();
+        const invalidUpgradeMessages = this.filterInvalidUpgradePairs();
+        if(invalidUpgradeMessages.length) {
+            const errMessage = `Upgrade message invalid. containerName and imageTag need to be specified. 
+            Payload needs to be an array in the following format: [{containerName: <>, imageTag: <>}]
+            Not Valid: ${invalidUpgradeMessages.toString()}`;
+
+            // eslint-disable-next-line no-console
+            console.error(errMessage);
+            throw new Error(errMessage);
+        }
     }
 
     setupKCWithKCPath(): void {
@@ -43,6 +53,16 @@ export default class K8sManager {
         this.k8sCoreV1Api = this.kc.makeApiClient(k8s.CoreV1Api);
         this.k8sAppsV1Api = this.kc.makeApiClient(k8s.AppsV1Api);
         this.kubeAPIConfigured = true;
+    }
+
+    private filterInvalidUpgradePairs(): Array<IUpgradeMessage> {
+        const invalidUpgradeMessages: Array<IUpgradeMessage> = [];
+        for(const containerVersionPair of this.upgradeMessage) {
+            if(!containerVersionPair.containerName || !containerVersionPair.imageTag) {
+                invalidUpgradeMessages.push(containerVersionPair);
+            }
+        }
+        return invalidUpgradeMessages;
     }
 
     async pullDeploymentObject(): Promise<k8s.V1Deployment> {
