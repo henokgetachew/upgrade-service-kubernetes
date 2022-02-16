@@ -8,7 +8,7 @@ export default class Environment {
         'KUBECONFIG_DEFAULT_PATH': string, 'CHT_DEPLOYMENT_NAME': string, 'CHT_NAMESPACE': string} | null {
 
         try {
-            const localConfigPath = '../../config.json';
+            const localConfigPath = path.resolve(__dirname,'../../config.json');
             const config = JSON.parse(fs.readFileSync(localConfigPath).toString());
             return config;
         } catch (err) {
