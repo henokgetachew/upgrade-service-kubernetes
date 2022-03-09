@@ -29,6 +29,31 @@ describe('env-manager', () => {
         });
 
         expect(Environment.getNamespace()).toBe('test');
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('can take namespace from cluster', () => {
+        process.env.CHT_NAMESPACE = '';
+
+        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
+            return true;
+        });
+
+        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
+            return {
+                'KUBECONFIG_DEFAULT_PATH': '',
+                'CHT_DEPLOYMENT_NAME': '',
+                'CHT_NAMESPACE': ''
+            };
+        });
+
+        const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((): string => {
+            return 'test-cluster-namespace';
+        });
+
+        expect(Environment.getNamespace()).toBe('test-cluster-namespace');
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
     });
 
     it('Throws error when namespace not found', () => {
@@ -57,8 +82,10 @@ describe('env-manager', () => {
     });
 
     it('Determines if running within a cluster', () => {
-        const spy = jest.spyOn(fs, 'existsSync').mockImplementation((thePath): boolean => (true));
+        const spyFS = jest.spyOn(fs, 'existsSync').mockImplementation((thePath): boolean => (true));
         expect(Environment.runningWithinCluster()).toBe(true);
+        expect(spyFS).toHaveBeenCalledTimes(1);
+        expect(spyFS).toHaveBeenCalledWith('/var/run/secrets/kubernetes.io/serviceaccount/token');
     });
 
     it('Determines if running within test automation', () => {
@@ -69,5 +96,6 @@ describe('env-manager', () => {
         process.env.CHT_DEPLOYMENT_NAME = 'TheDeployment';
         expect(Environment.getDeploymentName()).toBe('TheDeployment');
     });
+
 
 });
