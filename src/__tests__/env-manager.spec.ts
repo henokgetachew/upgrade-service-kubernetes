@@ -32,7 +32,7 @@ describe('env-manager', () => {
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    it('can take namespace from cluster', () => {
+    it('Can take namespace from cluster', () => {
         process.env.CHT_NAMESPACE = '';
 
         const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
@@ -78,6 +78,38 @@ describe('env-manager', () => {
             errMsg = err;
         }
 
+        expect(errMsg).toBeDefined();
+    });
+
+    it('Throws error when namespace file missing in cluster', () => {
+        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
+            return true;
+        });
+        process.env.CHT_NAMESPACE = '';
+
+        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
+            return {
+                'KUBECONFIG_DEFAULT_PATH': '',
+                'CHT_DEPLOYMENT_NAME': '',
+                'CHT_NAMESPACE': ''
+            };
+        });
+
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((): any => {
+            throw new Error('File not found!');
+        });
+
+        let errMsg = undefined;
+        let namespace = undefined;
+        try {
+            namespace = Environment.getNamespace();
+        } catch (err) {
+            errMsg = err;
+        }
+
+        expect(namespace).toBeUndefined();
         expect(errMsg).toBeDefined();
     });
 
