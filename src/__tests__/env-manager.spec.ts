@@ -229,4 +229,13 @@ describe('env-manager', () => {
 
         expect(errMsg).toBeDefined();
     });
+
+    it('LocalConfig returns null when there is a JSON parsing issue', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const spy = jest.spyOn(JSON, 'parse').mockImplementation((): any => {
+            throw new Error('JSON Parsing Error');
+        });
+
+        expect(Environment.localConfig()).toBeNull;
+    });
 });
