@@ -167,5 +167,20 @@ describe('k8s-manager', () => {
         expect(response.deployment).toBeInstanceOf(V1Deployment);
     });
 
+    it('Throws error when pulling missing container in namespace', async () => {
+        const upgradeMessageArray: IUpgradeMessage[] = [
+            {containerName: 'missing-container', imageTag: 'some-tag-doesnt-matter-here'}
+        ];
+
+        let errMessage = undefined;
+        try {
+            const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+            const response = await k8sMgr.getContainerInNamespace('missing-container');
+        } catch (err) {
+            errMessage = err;
+        }
+
+        expect(errMessage).toBeDefined();
+    });
 
 });
