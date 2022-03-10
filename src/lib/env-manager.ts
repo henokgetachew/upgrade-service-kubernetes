@@ -49,14 +49,20 @@ export default class Environment {
         return deploymentName;
     }
 
-    static getKubeConfigPath(): string | undefined {
+    static getKubeConfigPath(): string {
         if(Environment.runningWithinCluster()) {
             throw new Error('Runing within cluster. Load config from cluster.');
         }
         if (Environment.runningWithinTestAutomation()) {
             return path.join(os.homedir(), '.kube/config');
         }
-        return process.env.KUBECONFIG || Environment.localConfig()?.KUBECONFIG_DEFAULT_PATH;
+        const kubeConfigPath = process.env.KUBECONFIG || Environment.localConfig()?.KUBECONFIG_DEFAULT_PATH;
+
+        if(kubeConfigPath) {
+            return kubeConfigPath;
+        } else {
+            throw new Error('Could not get kube config path.');
+        }
     }
 
     static getUpgradeServicePort(): string {
