@@ -129,5 +129,41 @@ describe('env-manager', () => {
         expect(Environment.getDeploymentName()).toBe('TheDeployment');
     });
 
+    it('Takes CHT Deployment name from config', () => {
+        process.env.CHT_DEPLOYMENT_NAME = '';
+        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
+            return {
+                'KUBECONFIG_DEFAULT_PATH': '',
+                'CHT_DEPLOYMENT_NAME': 'On-hey-there',
+                'CHT_NAMESPACE': ''
+            };
+        });
+
+        expect(Environment.getDeploymentName()).toBe('On-hey-there');
+    });
+
+    it('Throws an error when deployment name not found', () => {
+        process.env.CHT_DEPLOYMENT_NAME = '';
+        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
+            return {
+                'KUBECONFIG_DEFAULT_PATH': '',
+                'CHT_DEPLOYMENT_NAME': '',
+                'CHT_NAMESPACE': ''
+            };
+        });
+
+        let errMsg = undefined;
+        let deploymentName = undefined;
+        try {
+            deploymentName = Environment.getDeploymentName();
+        } catch (err) {
+            errMsg = err;
+        }
+
+        expect(deploymentName).toBeUndefined();
+        expect(errMsg).toBeDefined();
+
+    });
+
 
 });
