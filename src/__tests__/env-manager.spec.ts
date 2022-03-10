@@ -162,8 +162,71 @@ describe('env-manager', () => {
 
         expect(deploymentName).toBeUndefined();
         expect(errMsg).toBeDefined();
-
     });
 
+    it('Throws an error when looking for path when running within cluster', () => {
+        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
+            return true;
+        });
 
+        let errMsg = undefined;
+        try {
+            Environment.getKubeConfigPath();
+        } catch (err) {
+            errMsg = err;
+        }
+
+        expect(errMsg).toBeDefined();
+    });
+
+    it('Correctly returns kubeconfig in test automation', () => {
+        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
+            return false;
+        });
+
+        expect(Environment.getKubeConfigPath()).toContain('.kube/config');
+    });
+
+    it('Correctly obtains kubeconfig from env var', () => {
+        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
+            return false;
+        });
+
+        const spyTestAutomation = jest.spyOn(Environment, 'runningWithinTestAutomation').mockImplementation(() => {
+            return false;
+        });
+
+        process.env.KUBECONFIG = 'a-test-config-path';
+
+        expect(Environment.getKubeConfigPath()).toBe('a-test-config-path');
+    });
+
+    it('Throws error when kubeconfig path not found', () => {
+        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
+            return false;
+        });
+
+        const spyTestAutomation = jest.spyOn(Environment, 'runningWithinTestAutomation').mockImplementation(() => {
+            return false;
+        });
+
+        process.env.KUBECONFIG = '';
+
+        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
+            return {
+                'KUBECONFIG_DEFAULT_PATH': '',
+                'CHT_DEPLOYMENT_NAME': '',
+                'CHT_NAMESPACE': ''
+            };
+        });
+
+        let errMsg = undefined;
+        try {
+            Environment.getKubeConfigPath();
+        } catch (err) {
+            errMsg = err;
+        }
+
+        expect(errMsg).toBeDefined();
+    });
 });
