@@ -10,6 +10,7 @@ const initialize = async () => {
     await runCommand(`kubectl create namespace ${tempNamespace}`, 'Creating test namespace k8s-cht-deployment');
     await runCommand(`kubectl -n ${tempNamespace} apply -f kubernetes/`, 'Creating deployments...');
     await runCommand(`kubectl -n ${tempNamespace} apply -f kubernetes/rbac/`, 'Applying role based policies...');
+    await runCommand('sleep 5');
 };
 
 const initializeAssumeClusterAlreadyExists = async () => {
