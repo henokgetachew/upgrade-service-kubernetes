@@ -1,22 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { V1Container, V1Deployment } from '@kubernetes/client-node';
-import * as k8s from '@kubernetes/client-node';
 import Environment from '../lib/env-manager';
 import K8sManager from '../lib/k8s-manager';
 import { IUpgradeMessage } from '../lib/upgrade-message';
 import { runCommand } from '../utils/command-exec';
 import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
-
+import { expect } from 'chai';
+import { before, beforeEach } from 'mocha';
+import sinon from 'sinon';
+import { V1Container, V1Deployment } from '@kubernetes/client-node';
 
 describe('k8s-manager', () => {
 
-    beforeAll(async () => {
+    let sandbox: sinon.SinonSandbox;
+
+    before(async () => {
         await runCommand(
             `kubectl apply -f src/__tests__/resources/nginx.default.yaml`,
             'Creating an nginx deployment in the default namespace');
         await runCommand(
             `kubectl -n ${tempNamespace} apply -f src/__tests__/resources/nginx.yaml`, 'Creating an nginx deployment');
         await runCommand(`sleep 2`, 'Waiting a few seconds...');
+    });
+
+    beforeEach(() => {
+        sandbox = sinon.createSandbox();
+    });
+
+    afterEach(() => {
+        sandbox.restore();
     });
 
     it('Role Based Access Policy Works', async () => {
@@ -34,24 +45,21 @@ describe('k8s-manager', () => {
             errMessage = err;
         }
 
-        expect(errMessage).toBeDefined();
-
-    }, 50000);
+        expect(errMessage).to.not.be.undefined;
+    });
 
     it('upgradeDeploymentContainers works as intended', async () => {
         const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
         const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        k8sMgr.areAllDeploymentsInReadyState = jest.fn(() => new Promise(
-            (resolve) => resolve({ready: true, podsNotReady: undefined})
-        ));
+        sandbox.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
 
         const versionBefore = await k8sMgr.getCurrentVersion('nginx');
         await k8sMgr.upgradeDeploymentContainers();
         const versionAfter = await k8sMgr.getCurrentVersion('nginx');
 
-        expect(versionBefore).toContain('1.20');
-        expect(versionAfter).toContain('1.19');
+        expect(versionBefore).to.contain('1.20');
+        expect(versionAfter).to.contain('1.19');
     });
 
     it('Can pull deployment object', async () => {
@@ -60,16 +68,14 @@ describe('k8s-manager', () => {
 
         const deployment = await k8sMgr.pullDeploymentObject();
 
-        expect(deployment).toBeInstanceOf(V1Deployment);
+        expect(deployment instanceof V1Deployment);
     });
 
     it('Upgrade throws error when image not found', async () => {
         const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'wacko-image', imageTag: '1.19'}];
         const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        k8sMgr.areAllDeploymentsInReadyState = jest.fn(() => new Promise(
-            (resolve) => resolve({ready: true, podsNotReady: undefined})
-        ));
+        sandbox.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
 
         let errMessage = undefined;
         try {
@@ -78,7 +84,7 @@ describe('k8s-manager', () => {
             errMessage = err;
         }
 
-        expect(errMessage).toBeDefined();
+        expect(errMessage).to.not.be.undefined;
     });
 
     it('Shouldnt proceed with upgrade if all containers not ready', async () => {
@@ -94,7 +100,7 @@ describe('k8s-manager', () => {
             errMessage = err;
         }
 
-        expect(errMessage).toBeDefined();
+        expect(errMessage).to.not.be.undefined;
     });
 
     it('Throws an error when pulling a deployment object from non-existent namespace', async () => {
@@ -108,7 +114,7 @@ describe('k8s-manager', () => {
             errMessage = err;
         }
 
-        expect(errMessage).toBeDefined();
+        expect(errMessage).to.not.be.undefined;
     });
 
     it('Throws an error when pulling a deployment object from non-existent deployment', async () => {
@@ -122,7 +128,7 @@ describe('k8s-manager', () => {
             errMessage = err;
         }
 
-        expect(errMessage).toBeDefined();
+        expect(errMessage).to.not.be.undefined;
     });
 
     it('Throws error when upgrade message invalid', () => {
@@ -130,29 +136,24 @@ describe('k8s-manager', () => {
 
         let errMessage = undefined;
         try {
-            const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+            new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
         } catch (err) {
             errMessage = err;
         }
 
-        expect(errMessage).toBeDefined();
+        expect(errMessage).to.not.be.undefined;
     });
 
     it('Can load config from cluster', () => {
         const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'nginx', imageTag: '1.20' }];
         const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        const spy = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation((): boolean => {
-            return true;
-        });
+        sandbox.stub(Environment, 'runningWithinCluster').returns(true);
 
-        const spyKC = jest.spyOn(k8sMgr.kc, 'loadFromCluster').mockImplementation((): boolean => {
-            return true;
-        });
+        const kcStub = sandbox.stub(k8sMgr.kc, 'loadFromCluster').returns();
 
         k8sMgr.setupKCWithKCPath();
-
-        expect(spyKC).toHaveBeenCalledTimes(1);
+        expect(kcStub.callCount).to.be.equal(1);
     });
 
     it('Can pull container in namespace', async () => {
@@ -163,8 +164,8 @@ describe('k8s-manager', () => {
 
         const response = await k8sMgr.getContainerInNamespace('upgrade-service');
 
-        expect(response.container).toBeInstanceOf(V1Container);
-        expect(response.deployment).toBeInstanceOf(V1Deployment);
+        expect(response.container instanceof V1Container);
+        expect(response.deployment instanceof V1Deployment);
     });
 
     it('Throws error when pulling missing container in namespace', async () => {
@@ -175,12 +176,12 @@ describe('k8s-manager', () => {
         let errMessage = undefined;
         try {
             const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
-            const response = await k8sMgr.getContainerInNamespace('missing-container');
+            await k8sMgr.getContainerInNamespace('missing-container');
         } catch (err) {
             errMessage = err;
         }
 
-        expect(errMessage).toBeDefined();
+        expect(errMessage).to.not.be.undefined;
     });
 
 });
