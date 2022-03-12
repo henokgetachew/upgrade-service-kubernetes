@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npx ts-node src/main/index.ts",
     "test": "./src/utils/init && NODE_ENV=test ./node_modules/mocha/bin/mocha  --timeout 10000 --require ts-node/register ./src/__tests__/*.spec.ts || true && ./src/utils/destroy || true",
-    "test-on-pre-existing-cluster": "./src/utils/init-assume-cluster-exists && NODE_ENV=test nyc ./node_modules/mocha/bin/mocha  --timeout 10000 --require ts-node/register ./src/__tests__/*.spec.ts",
+    "test-on-pre-existing-cluster": "./src/utils/init-assume-cluster-exists && NODE_ENV=test ./node_modules/mocha/bin/mocha  --timeout 10000 --require ts-node/register ./src/__tests__/*.spec.ts",
     "coverage": "./src/utils/init && NODE_ENV=test nyc ./node_modules/mocha/bin/mocha  --timeout 10000 --require ts-node/register ./src/__tests__/*.spec.ts || true && ./src/utils/destroy || true",
     "build-docker-image": "docker build . -t medicmobile/upgrade-service:0.25"
   },
