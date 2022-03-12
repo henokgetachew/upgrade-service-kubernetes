@@ -1,75 +1,72 @@
 import Environment from '../lib/env-manager';
 import fs from 'fs';
+import { expect } from 'chai';
+import { beforeEach } from 'mocha';
+import sinon from 'sinon';
 
 describe('env-manager', () => {
+    let sandbox: sinon.SinonSandbox;
+
+    beforeEach(() => {
+        sandbox = sinon.createSandbox();
+    });
+
+    afterEach(() => {
+        sandbox.restore();
+    });
+
     it('Default upgrade service port is 5008', () => {
-        expect(Environment.getUpgradeServicePort()).toBe('5008');
+        expect(Environment.getUpgradeServicePort()).to.be.equal('5008');
     });
 
     it('Default upgrade service port can be overridden', () => {
         process.env.UPGRADE_SERVICE_PORT = '6000';
-        expect(Environment.getUpgradeServicePort()).toBe('6000');
+        expect(Environment.getUpgradeServicePort()).to.be.equal('6000');
     });
 
     it('Can take namespace from env var', () => {
         process.env.CHT_NAMESPACE = 'test-namespace';
-        expect(Environment.getNamespace()).toBe('test-namespace');
+        expect(Environment.getNamespace()).to.be.equal('test-namespace');
     });
 
     it('Can take namespace from config', () => {
         process.env.CHT_NAMESPACE = '';
 
-        const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((): string => {
-            const content = {
-                KUBECONFIG_DEFAULT_PATH: '/Users/henok/.kube/config',
-                CHT_DEPLOYMENT_NAME: 'test',
-                CHT_NAMESPACE: 'test'
-            };
-            return JSON.stringify(content);
-        });
+        const fsStub = sandbox.stub(fs, 'readFileSync').returns( JSON.stringify({
+            KUBECONFIG_DEFAULT_PATH: '/Users/henok/.kube/config',
+            CHT_DEPLOYMENT_NAME: 'test',
+            CHT_NAMESPACE: 'test'}));
 
-        expect(Environment.getNamespace()).toBe('test');
-        expect(spy).toHaveBeenCalledTimes(1);
+        expect(Environment.getNamespace()).to.be.equal('test');
+        expect(fsStub.calledOnce);
     });
 
     it('Can take namespace from cluster', () => {
         process.env.CHT_NAMESPACE = '';
 
-        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
-            return true;
+        sandbox.stub(Environment, 'runningWithinCluster').returns(true);
+        sandbox.stub(Environment, 'localConfig').returns({
+            'KUBECONFIG_DEFAULT_PATH': '',
+            'CHT_DEPLOYMENT_NAME': '',
+            'CHT_NAMESPACE': ''
         });
 
-        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
-            return {
-                'KUBECONFIG_DEFAULT_PATH': '',
-                'CHT_DEPLOYMENT_NAME': '',
-                'CHT_NAMESPACE': ''
-            };
-        });
+        const spy = sandbox.stub(fs, 'readFileSync').returns('test-cluster-namespace');
 
-        const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((): string => {
-            return 'test-cluster-namespace';
-        });
-
-        expect(Environment.getNamespace()).toBe('test-cluster-namespace');
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy).toHaveBeenCalledWith('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
+        expect(Environment.getNamespace()).to.be.equal('test-cluster-namespace');
+        expect(spy.calledOnce);
+        expect(spy.calledWith('/var/run/secrets/kubernetes.io/serviceaccount/namespace'));
     });
 
     it('Throws error when namespace not found', () => {
-        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
-            return false;
-        });
+        sandbox.stub(Environment, 'runningWithinCluster').returns(false);
         process.env.CHT_NAMESPACE = '';
 
-        const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((): string => {
-            const content = {
-                KUBECONFIG_DEFAULT_PATH: '/Users/henok/.kube/config',
-                CHT_DEPLOYMENT_NAME: '',
-                CHT_NAMESPACE: ''
-            };
-            return JSON.stringify(content);
-        });
+        sandbox.stub(fs, 'readFileSync').returns(JSON.stringify({
+            KUBECONFIG_DEFAULT_PATH: '/Users/henok/.kube/config',
+            CHT_DEPLOYMENT_NAME: '',
+            CHT_NAMESPACE: ''
+        }));
 
         let errMsg = undefined;
         try {
@@ -78,28 +75,20 @@ describe('env-manager', () => {
             errMsg = err;
         }
 
-        expect(errMsg).toBeDefined();
+        expect(errMsg).to.not.be.undefined;
     });
 
     it('Throws error when namespace file missing in cluster', () => {
-        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
-            return true;
-        });
+        sandbox.stub(Environment, 'runningWithinCluster').returns(true);
         process.env.CHT_NAMESPACE = '';
 
-        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
-            return {
-                'KUBECONFIG_DEFAULT_PATH': '',
-                'CHT_DEPLOYMENT_NAME': '',
-                'CHT_NAMESPACE': ''
-            };
+        sandbox.stub(Environment, 'localConfig').returns({
+            'KUBECONFIG_DEFAULT_PATH': '',
+            'CHT_DEPLOYMENT_NAME': '',
+            'CHT_NAMESPACE': ''
         });
 
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((): any => {
-            throw new Error('File not found!');
-        });
+        sandbox.stub(fs, 'readFileSync').throwsException('File not found!');
 
         let errMsg = undefined;
         let namespace = undefined;
@@ -109,47 +98,43 @@ describe('env-manager', () => {
             errMsg = err;
         }
 
-        expect(namespace).toBeUndefined();
-        expect(errMsg).toBeDefined();
+        expect(namespace).to.be.undefined;
+        expect(errMsg).to.not.be.undefined;
     });
 
     it('Determines if running within a cluster', () => {
-        const spyFS = jest.spyOn(fs, 'existsSync').mockImplementation((thePath): boolean => (true));
-        expect(Environment.runningWithinCluster()).toBe(true);
-        expect(spyFS).toHaveBeenCalledTimes(1);
-        expect(spyFS).toHaveBeenCalledWith('/var/run/secrets/kubernetes.io/serviceaccount/token');
+        const spyFS = sandbox.stub(fs, 'existsSync').returns(true);
+        expect(Environment.runningWithinCluster()).to.be.equal(true);
+        expect(spyFS.calledOnce);
+        expect(spyFS.calledWith('/var/run/secrets/kubernetes.io/serviceaccount/token'));
     });
 
     it('Determines if running within test automation', () => {
-        expect(Environment.runningWithinTestAutomation()).toBe(true);
+        expect(Environment.runningWithinTestAutomation()).to.be.equal(true);
     });
 
     it('Reads CHT Deployment name from env variable', () => {
         process.env.CHT_DEPLOYMENT_NAME = 'TheDeployment';
-        expect(Environment.getDeploymentName()).toBe('TheDeployment');
+        expect(Environment.getDeploymentName()).to.be.equal('TheDeployment');
     });
 
     it('Takes CHT Deployment name from config', () => {
         process.env.CHT_DEPLOYMENT_NAME = '';
-        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
-            return {
-                'KUBECONFIG_DEFAULT_PATH': '',
-                'CHT_DEPLOYMENT_NAME': 'On-hey-there',
-                'CHT_NAMESPACE': ''
-            };
+        sandbox.stub(Environment, 'localConfig').returns({
+            'KUBECONFIG_DEFAULT_PATH': '',
+            'CHT_DEPLOYMENT_NAME': 'On-hey-there',
+            'CHT_NAMESPACE': ''
         });
 
-        expect(Environment.getDeploymentName()).toBe('On-hey-there');
+        expect(Environment.getDeploymentName()).to.be.equal('On-hey-there');
     });
 
     it('Throws an error when deployment name not found', () => {
         process.env.CHT_DEPLOYMENT_NAME = '';
-        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
-            return {
-                'KUBECONFIG_DEFAULT_PATH': '',
-                'CHT_DEPLOYMENT_NAME': '',
-                'CHT_NAMESPACE': ''
-            };
+        sandbox.stub(Environment, 'localConfig').returns({
+            'KUBECONFIG_DEFAULT_PATH': '',
+            'CHT_DEPLOYMENT_NAME': '',
+            'CHT_NAMESPACE': ''
         });
 
         let errMsg = undefined;
@@ -160,14 +145,12 @@ describe('env-manager', () => {
             errMsg = err;
         }
 
-        expect(deploymentName).toBeUndefined();
-        expect(errMsg).toBeDefined();
+        expect(deploymentName).to.be.undefined;
+        expect(errMsg).to.not.be.undefined;
     });
 
     it('Throws an error when looking for path when running within cluster', () => {
-        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
-            return true;
-        });
+        sandbox.stub(Environment, 'runningWithinCluster').returns(true);
 
         let errMsg = undefined;
         try {
@@ -176,48 +159,35 @@ describe('env-manager', () => {
             errMsg = err;
         }
 
-        expect(errMsg).toBeDefined();
+        expect(errMsg).to.not.be.undefined;
     });
 
     it('Correctly returns kubeconfig in test automation', () => {
-        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
-            return false;
-        });
-
-        expect(Environment.getKubeConfigPath()).toContain('.kube/config');
+        sandbox.stub(Environment, 'runningWithinCluster').returns(false);
+        expect(Environment.getKubeConfigPath()).to.contain('.kube/config');
     });
 
     it('Correctly obtains kubeconfig from env var', () => {
-        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
-            return false;
-        });
+        sandbox.stub(Environment, 'runningWithinCluster').returns(false);
 
-        const spyTestAutomation = jest.spyOn(Environment, 'runningWithinTestAutomation').mockImplementation(() => {
-            return false;
-        });
+        sandbox.stub(Environment, 'runningWithinTestAutomation').returns(false);
 
         process.env.KUBECONFIG = 'a-test-config-path';
 
-        expect(Environment.getKubeConfigPath()).toBe('a-test-config-path');
+        expect(Environment.getKubeConfigPath()).to.be.equal('a-test-config-path');
     });
 
     it('Throws error when kubeconfig path not found', () => {
-        const spyRunningWithinCluster = jest.spyOn(Environment, 'runningWithinCluster').mockImplementation(() => {
-            return false;
-        });
+        sandbox.stub(Environment, 'runningWithinCluster').returns(false);
 
-        const spyTestAutomation = jest.spyOn(Environment, 'runningWithinTestAutomation').mockImplementation(() => {
-            return false;
-        });
+        sandbox.stub(Environment, 'runningWithinTestAutomation').returns(false);
 
         process.env.KUBECONFIG = '';
 
-        const spyLocalConfig = jest.spyOn(Environment, 'localConfig').mockImplementation(() => {
-            return {
-                'KUBECONFIG_DEFAULT_PATH': '',
-                'CHT_DEPLOYMENT_NAME': '',
-                'CHT_NAMESPACE': ''
-            };
+        sandbox.stub(Environment, 'localConfig').returns({
+            'KUBECONFIG_DEFAULT_PATH': '',
+            'CHT_DEPLOYMENT_NAME': '',
+            'CHT_NAMESPACE': ''
         });
 
         let errMsg = undefined;
@@ -227,15 +197,11 @@ describe('env-manager', () => {
             errMsg = err;
         }
 
-        expect(errMsg).toBeDefined();
+        expect(errMsg).to.not.be.undefined;
     });
 
     it('LocalConfig returns null when there is a JSON parsing issue', () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const spy = jest.spyOn(JSON, 'parse').mockImplementation((): any => {
-            throw new Error('JSON Parsing Error');
-        });
-
-        expect(Environment.localConfig()).toBeNull;
+        sandbox.stub(JSON, 'parse').throwsException('JSON Parsing Error');
+        expect(Environment.localConfig()).to.be.null;
     });
 });
