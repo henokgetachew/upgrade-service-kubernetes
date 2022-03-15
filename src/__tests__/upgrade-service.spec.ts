@@ -6,10 +6,9 @@ import { UpgradeResult } from '../lib/upgrade-result';
 import { before } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import Sinon from 'sinon';
 
 describe('Upgrade Service', () => {
-    let sandbox: Sinon.SinonSandbox;
+    let sandbox: sinon.SinonSandbox;
 
     before(async () => {
         await runCommand(
