@@ -8,7 +8,10 @@
     "test": "./src/utils/init && NODE_ENV=test ./node_modules/mocha/bin/mocha  --timeout 10000 --require ts-node/register ./src/__tests__/*.spec.ts || true && ./src/utils/destroy || true",
     "test-on-pre-existing-cluster": "./src/utils/init-assume-cluster-exists && NODE_ENV=test ./node_modules/mocha/bin/mocha  --timeout 10000 --require ts-node/register ./src/__tests__/*.spec.ts",
     "coverage": "./src/utils/init && NODE_ENV=test nyc ./node_modules/mocha/bin/mocha  --timeout 10000 --require ts-node/register ./src/__tests__/*.spec.ts || true && ./src/utils/destroy || true",
-    "build-docker-image": "docker build . -t medicmobile/upgrade-service:0.25"
+    "e2e": "./src/utils/init && NODE_ENV=test ./node_modules/mocha/bin/mocha  --timeout 20000 --require ts-node/register ./src/__tests__/e2e/*.spec.ts || true && ./src/utils/destroy || true",
+    "e2e-on-pre-existing-cluster": "./src/utils/init-assume-cluster-exists && NODE_ENV=test ./node_modules/mocha/bin/mocha  --timeout 20000 --require ts-node/register ./src/__tests__/e2e/*.spec.ts || true && ./src/utils/destroy || true",
+    "build-docker-image": "docker build . -t medicmobile/upgrade-service:0.26",
+    "build-docker-image-latest": "docker build . -t medicmobile/upgrade-service"
   },
   "author": "Henok",
   "license": "ISC",
