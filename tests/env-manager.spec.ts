@@ -1,4 +1,4 @@
-import Environment from '../lib/env-manager';
+import Environment from '../src/lib/env-manager';
 import fs from 'fs';
 import { expect } from 'chai';
 import { beforeEach } from 'mocha';
