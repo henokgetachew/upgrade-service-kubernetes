@@ -4,7 +4,7 @@
 const setupCluster = require('./setup-cluster');
 
 const run = async () => {
-    await setupCluster.initializeAssumeClusterAlreadyExists();
+  await setupCluster.initializeAssumeClusterAlreadyExists();
 };
 
 run();

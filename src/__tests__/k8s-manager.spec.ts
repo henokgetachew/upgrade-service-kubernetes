@@ -11,177 +11,177 @@ import { V1Container, V1Deployment } from '@kubernetes/client-node';
 
 describe('k8s-manager', () => {
 
-    let sandbox: sinon.SinonSandbox;
+  let sandbox: sinon.SinonSandbox;
 
-    before(async () => {
-        await runCommand(
-            `kubectl apply -f src/__tests__/resources/nginx.default.yaml`,
-            'Creating an nginx deployment in the default namespace');
-        await runCommand(
-            `kubectl -n ${tempNamespace} apply -f src/__tests__/resources/nginx.yaml`, 'Creating an nginx deployment');
-        await runCommand(`sleep 2`, 'Waiting a few seconds...');
-    });
+  before(async () => {
+    await runCommand(
+      `kubectl apply -f src/__tests__/resources/nginx.default.yaml`,
+      'Creating an nginx deployment in the default namespace');
+    await runCommand(
+      `kubectl -n ${tempNamespace} apply -f src/__tests__/resources/nginx.yaml`, 'Creating an nginx deployment');
+    await runCommand(`sleep 2`, 'Waiting a few seconds...');
+  });
 
-    beforeEach(() => {
-        sandbox = sinon.createSandbox();
-    });
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+  });
 
-    afterEach(() => {
-        sandbox.restore();
-    });
+  afterEach(() => {
+    sandbox.restore();
+  });
 
-    it('Role Based Access Policy Works', async () => {
-        /*
+  it('Role Based Access Policy Works', async () => {
+    /*
         We shouldn't be able to upgrade deployments in different namespaces.
         */
 
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx-default', imageTag: '1.20'}];
-        const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
-        let errMessage: any = undefined;
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx-default', imageTag: '1.20'}];
+    const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+    let errMessage: any = undefined;
         
-        try {
-            await k8sMgr.upgradeDeploymentContainers();
-        } catch (err) {
-            errMessage = err;
-        }
+    try {
+      await k8sMgr.upgradeDeploymentContainers();
+    } catch (err) {
+      errMessage = err;
+    }
 
-        expect(errMessage).to.not.be.undefined;
-    });
+    expect(errMessage).to.not.be.undefined;
+  });
 
-    it('upgradeDeploymentContainers works as intended', async () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
-        const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+  it('upgradeDeploymentContainers works as intended', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
+    const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        sandbox.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
+    sandbox.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
 
-        const versionBefore = await k8sMgr.getCurrentVersion('nginx');
-        await k8sMgr.upgradeDeploymentContainers();
-        const versionAfter = await k8sMgr.getCurrentVersion('nginx');
+    const versionBefore = await k8sMgr.getCurrentVersion('nginx');
+    await k8sMgr.upgradeDeploymentContainers();
+    const versionAfter = await k8sMgr.getCurrentVersion('nginx');
 
-        expect(versionBefore).to.contain('1.20');
-        expect(versionAfter).to.contain('1.19');
-    });
+    expect(versionBefore).to.contain('1.20');
+    expect(versionAfter).to.contain('1.19');
+  });
 
-    it('Can pull deployment object', async () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
-        const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+  it('Can pull deployment object', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
+    const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        const deployment = await k8sMgr.pullDeploymentObject();
+    const deployment = await k8sMgr.pullDeploymentObject();
 
-        expect(deployment instanceof V1Deployment);
-    });
+    expect(deployment instanceof V1Deployment);
+  });
 
-    it('Upgrade throws error when image not found', async () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'wacko-image', imageTag: '1.19'}];
-        const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+  it('Upgrade throws error when image not found', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'wacko-image', imageTag: '1.19'}];
+    const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        sandbox.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
+    sandbox.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
 
-        let errMessage = undefined;
-        try {
-            await k8sMgr.upgradeDeploymentContainers();
-        } catch (err) {
-            errMessage = err;
-        }
+    let errMessage = undefined;
+    try {
+      await k8sMgr.upgradeDeploymentContainers();
+    } catch (err) {
+      errMessage = err;
+    }
 
-        expect(errMessage).to.not.be.undefined;
-    });
+    expect(errMessage).to.not.be.undefined;
+  });
 
-    it('Shouldnt proceed with upgrade if all containers not ready', async () => {
-        await runCommand(
-            `kubectl -n ${tempNamespace} run container-zoro --image=busybox:1.xx`,
-            'Creating a non working image...');
-        const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'container-zoro', imageTag: '1.20' }];
-        const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
-        let errMessage = undefined;
-        try {
-            await k8sMgr.upgradeDeploymentContainers();
-        } catch (err) {
-            errMessage = err;
-        }
+  it('Shouldnt proceed with upgrade if all containers not ready', async () => {
+    await runCommand(
+      `kubectl -n ${tempNamespace} run container-zoro --image=busybox:1.xx`,
+      'Creating a non working image...');
+    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'container-zoro', imageTag: '1.20' }];
+    const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+    let errMessage = undefined;
+    try {
+      await k8sMgr.upgradeDeploymentContainers();
+    } catch (err) {
+      errMessage = err;
+    }
 
-        expect(errMessage).to.not.be.undefined;
-    });
+    expect(errMessage).to.not.be.undefined;
+  });
 
-    it('Throws an error when pulling a deployment object from non-existent namespace', async () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
-        const k8sMgr = new K8sManager('what-namespace', k8s_deployment_name, upgradeMessageArray);
+  it('Throws an error when pulling a deployment object from non-existent namespace', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
+    const k8sMgr = new K8sManager('what-namespace', k8s_deployment_name, upgradeMessageArray);
 
-        let errMessage = undefined;
-        try {
-            await k8sMgr.pullDeploymentObject();
-        } catch (err) {
-            errMessage = err;
-        }
+    let errMessage = undefined;
+    try {
+      await k8sMgr.pullDeploymentObject();
+    } catch (err) {
+      errMessage = err;
+    }
 
-        expect(errMessage).to.not.be.undefined;
-    });
+    expect(errMessage).to.not.be.undefined;
+  });
 
-    it('Throws an error when pulling a deployment object from non-existent deployment', async () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
-        const k8sMgr = new K8sManager(tempNamespace, 'what-deployment', upgradeMessageArray);
+  it('Throws an error when pulling a deployment object from non-existent deployment', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
+    const k8sMgr = new K8sManager(tempNamespace, 'what-deployment', upgradeMessageArray);
 
-        let errMessage = undefined;
-        try {
-            await k8sMgr.pullDeploymentObject();
-        } catch (err) {
-            errMessage = err;
-        }
+    let errMessage = undefined;
+    try {
+      await k8sMgr.pullDeploymentObject();
+    } catch (err) {
+      errMessage = err;
+    }
 
-        expect(errMessage).to.not.be.undefined;
-    });
+    expect(errMessage).to.not.be.undefined;
+  });
 
-    it('Throws error when upgrade message invalid', () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [{containerName: '', imageTag: '1.19'}];
+  it('Throws error when upgrade message invalid', () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: '', imageTag: '1.19'}];
 
-        let errMessage = undefined;
-        try {
-            new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
-        } catch (err) {
-            errMessage = err;
-        }
+    let errMessage = undefined;
+    try {
+      new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+    } catch (err) {
+      errMessage = err;
+    }
 
-        expect(errMessage).to.not.be.undefined;
-    });
+    expect(errMessage).to.not.be.undefined;
+  });
 
-    it('Can load config from cluster', () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'nginx', imageTag: '1.20' }];
-        const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+  it('Can load config from cluster', () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'nginx', imageTag: '1.20' }];
+    const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        sandbox.stub(Environment, 'runningWithinCluster').returns(true);
+    sandbox.stub(Environment, 'runningWithinCluster').returns(true);
 
-        const kcStub = sandbox.stub(k8sMgr.kc, 'loadFromCluster').returns();
+    const kcStub = sandbox.stub(k8sMgr.kc, 'loadFromCluster').returns();
 
-        k8sMgr.setupKCWithKCPath();
-        expect(kcStub.callCount).to.be.equal(1);
-    });
+    k8sMgr.setupKCWithKCPath();
+    expect(kcStub.callCount).to.be.equal(1);
+  });
 
-    it('Can pull container in namespace', async () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [
-            {containerName: 'upgrade-service', imageTag: 'some-tag-doesnt-matter-here'}
-        ];
-        const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+  it('Can pull container in namespace', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [
+      {containerName: 'upgrade-service', imageTag: 'some-tag-doesnt-matter-here'}
+    ];
+    const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-        const response = await k8sMgr.getContainerInNamespace('upgrade-service');
+    const response = await k8sMgr.getContainerInNamespace('upgrade-service');
 
-        expect(response.container instanceof V1Container);
-        expect(response.deployment instanceof V1Deployment);
-    });
+    expect(response.container instanceof V1Container);
+    expect(response.deployment instanceof V1Deployment);
+  });
 
-    it('Throws error when pulling missing container in namespace', async () => {
-        const upgradeMessageArray: IUpgradeMessage[] = [
-            {containerName: 'missing-container', imageTag: 'some-tag-doesnt-matter-here'}
-        ];
+  it('Throws error when pulling missing container in namespace', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [
+      {containerName: 'missing-container', imageTag: 'some-tag-doesnt-matter-here'}
+    ];
 
-        let errMessage = undefined;
-        try {
-            const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
-            await k8sMgr.getContainerInNamespace('missing-container');
-        } catch (err) {
-            errMessage = err;
-        }
+    let errMessage = undefined;
+    try {
+      const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
+      await k8sMgr.getContainerInNamespace('missing-container');
+    } catch (err) {
+      errMessage = err;
+    }
 
-        expect(errMessage).to.not.be.undefined;
-    });
+    expect(errMessage).to.not.be.undefined;
+  });
 
 });
