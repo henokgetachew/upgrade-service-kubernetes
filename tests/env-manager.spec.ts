@@ -201,7 +201,7 @@ describe('env-manager', () => {
   });
 
   it('LocalConfig returns null when there is a JSON parsing issue', () => {
-    sinon.stub(JSON, 'parse').throwsException('JSON Parsing Error');
+    sinon.stub(fs, 'readFileSync').returns('{ Wohoo: wuhha');
     expect(Environment.localConfig()).to.be.null;
   });
 });
