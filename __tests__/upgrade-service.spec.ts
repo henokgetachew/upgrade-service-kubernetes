@@ -1,8 +1,8 @@
-import { IUpgradeMessage } from '../lib/upgrade-message';
-import { runCommand } from '../utils/command-exec';
-import UpgradeService from '../lib/upgrade-service';
-import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
-import { UpgradeResult } from '../lib/upgrade-result';
+import { IUpgradeMessage } from '../src/lib/upgrade-message';
+import { runCommand } from '../src/utils/command-exec';
+import UpgradeService from '../src/lib/upgrade-service';
+import { k8s_deployment_name, tempNamespace } from '../src/__tests__/resources/test-constants';
+import { UpgradeResult } from '../src/lib/upgrade-result';
 import { before } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
