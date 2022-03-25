@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { ILocalConfig } from './local-config';
 
 export default class Environment {
 
-  static localConfig(): {
-        'KUBECONFIG_DEFAULT_PATH': string, 'CHT_DEPLOYMENT_NAME': string, 'CHT_NAMESPACE': string} | null {
+  static localConfig(): ILocalConfig | null {
 
     try {
       const localConfigPath = path.resolve(__dirname,'../../config.json');
