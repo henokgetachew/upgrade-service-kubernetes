@@ -59,9 +59,8 @@ export default class Environment {
 
     if(kubeConfigPath) {
       return kubeConfigPath;
-    } else {
-      throw new Error('Could not get kube config path.');
     }
+    throw new Error('Could not get kube config path.');
   }
 
   static getUpgradeServicePort(): string {
