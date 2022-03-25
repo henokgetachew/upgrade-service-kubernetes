@@ -4,9 +4,15 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 describe('env-manager', () => {
+  let processBackup: NodeJS.ProcessEnv;
+
+  before(() => {
+    processBackup = process.env;
+  });
 
   afterEach(() => {
     sinon.restore();
+    process.env = processBackup;
   });
 
   it('Default upgrade service port is 5008', () => {
