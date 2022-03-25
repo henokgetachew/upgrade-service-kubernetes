@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable no-console */
 const { exec } = require('child_process');
 
 const runCommand = async function (command, statusUpdate) {
