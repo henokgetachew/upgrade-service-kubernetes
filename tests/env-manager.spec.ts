@@ -45,11 +45,11 @@ describe('env-manager', () => {
       'CHT_NAMESPACE': ''
     });
 
-    const spy = sinon.stub(fs, 'readFileSync').returns('test-cluster-namespace');
+    const fake = sinon.stub(fs, 'readFileSync').returns('test-cluster-namespace');
 
     expect(Environment.getNamespace()).to.be.equal('test-cluster-namespace');
-    expect(spy.calledOnce);
-    expect(spy.calledWith('/var/run/secrets/kubernetes.io/serviceaccount/namespace'));
+    expect(fake.calledOnce);
+    expect(fake.calledWith('/var/run/secrets/kubernetes.io/serviceaccount/namespace'));
   });
 
   it('Throws error when namespace not found', () => {
@@ -97,10 +97,10 @@ describe('env-manager', () => {
   });
 
   it('Determines if running within a cluster', () => {
-    const spyFS = sinon.stub(fs, 'existsSync').returns(true);
+    const fakeFS = sinon.stub(fs, 'existsSync').returns(true);
     expect(Environment.runningWithinCluster()).to.be.equal(true);
-    expect(spyFS.calledOnce);
-    expect(spyFS.calledWith('/var/run/secrets/kubernetes.io/serviceaccount/token'));
+    expect(fakeFS.calledOnce);
+    expect(fakeFS.calledWith('/var/run/secrets/kubernetes.io/serviceaccount/token'));
   });
 
   it('Determines if running within test automation', () => {
