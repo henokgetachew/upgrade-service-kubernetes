@@ -30,6 +30,7 @@ app.post('/upgrade', async (req: any, res: any) => {
       res.status(200).json({
         message: `Successfuly upgraded ${upgradeResponse.upgradeCount} containers`
       });
+      return;
     }
 
     console.error('Error during upgrade.', upgradeResponse.message);
@@ -52,6 +53,7 @@ app.get('/server-status',async (req: any, res: any) => {
       ready: isDeploymentsReady.ready,
       message: `Deployment is ready for upgrades`
     });
+    return;
   }
 
   res.status(200).json({
