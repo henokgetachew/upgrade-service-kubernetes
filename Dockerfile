@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM node:17.7.2-alpine3.15
 LABEL maintainer "Henok G. Alemayehu henok@medic.org"
 
 ENV TIME_ZONE=Etc/UTC

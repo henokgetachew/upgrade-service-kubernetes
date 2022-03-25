@@ -53,11 +53,11 @@ const initializeAssumeClusterAlreadyExists = async () => {
 };
 
 const destroy = async () => {
-    await runCommand('k3d cluster delete temporary-test-cluster', 'Deleting temporary test cluster...');
+  await runCommand('k3d cluster delete temporary-test-cluster', 'Deleting temporary test cluster...');
 };
 
 module.exports = {
-    initialize,
-    destroy,
-    initializeAssumeClusterAlreadyExists
+  initialize,
+  destroy,
+  initializeAssumeClusterAlreadyExists
 };

@@ -84,4 +84,8 @@ These don't need to be set - the kubernetes setup picks them up automatically. H
     "CHT_DEPLOYMENT_NAME": "",
     "CHT_NAMESPACE": ""
 ```
-It's a good idea to not change these settings unless you know what you're doing.
+It's a good idea to not change these settings unless you know what you're doing. Here's a short description of what each one of them are for.
+
+`"KUBECONFIG_DEFAULT_PATH"`: This helps you specify where the kubeconfig file exists on disk. If this is specified, it will be taken as the default.
+`"CHT_DEPLOYMENT_NAME"`: The name of the deployment you would like to use for the setup.
+`"CHT_NAMESPACE"`: The name of the namespace you would like to use for the setup.
