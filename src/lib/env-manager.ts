@@ -27,8 +27,12 @@ export default class Environment {
 
   static getNamespace(): string {
     let namespace = process.env.CHT_NAMESPACE || Environment.localConfig()?.CHT_NAMESPACE;
-    if(!namespace && Environment.runningWithinCluster()) {
-      namespace = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace').toString();
+    try {
+      if(!namespace && Environment.runningWithinCluster()) {
+        namespace = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace').toString();
+      }  
+    } catch (err) {
+      throw new Error('Namespace could not be determined.');
     }
 
     if (!namespace) {

@@ -68,14 +68,9 @@ describe('env-manager', () => {
       CHT_NAMESPACE: ''
     }));
 
-    let errMsg = undefined;
-    try {
+    expect(() => {
       Environment.getNamespace();
-    } catch (err) {
-      errMsg = err;
-    }
-
-    expect(errMsg).to.not.be.undefined;
+    }).to.throw(Error, 'Namespace could not be determined.');
   });
 
   it('Throws error when namespace file missing in cluster', () => {
@@ -90,16 +85,17 @@ describe('env-manager', () => {
 
     sinon.stub(fs, 'readFileSync').throwsException('File not found!');
 
-    let errMsg = undefined;
     let namespace = undefined;
+    let errMessage = undefined;
+    
     try {
       namespace = Environment.getNamespace();
-    } catch (err) {
-      errMsg = err;
+    } catch(err) {
+      errMessage = err;
     }
-
+    
+    expect((errMessage as Error).message).to.contain('Namespace could not be determined.');
     expect(namespace).to.be.undefined;
-    expect(errMsg).to.not.be.undefined;
   });
 
   it('Determines if running within a cluster', () => {
@@ -137,16 +133,13 @@ describe('env-manager', () => {
       'CHT_NAMESPACE': ''
     });
 
-    let errMsg = undefined;
     let deploymentName = undefined;
-    try {
-      deploymentName = Environment.getDeploymentName();
-    } catch (err) {
-      errMsg = err;
-    }
 
+    expect(() => {
+      deploymentName = Environment.getDeploymentName();
+    }).to.throw(Error, 'Deployment name could not be determined.');
+    
     expect(deploymentName).to.be.undefined;
-    expect(errMsg).to.not.be.undefined;
   });
 
   it('Throws an error when looking for path when running within cluster', () => {
@@ -159,7 +152,9 @@ describe('env-manager', () => {
       errMsg = err;
     }
 
-    expect(errMsg).to.not.be.undefined;
+    expect(() => {
+      Environment.getKubeConfigPath();
+    }).to.throw(Error, 'Runing within cluster. Load config from cluster.');
   });
 
   it('Correctly returns kubeconfig in test automation', () => {
@@ -190,14 +185,7 @@ describe('env-manager', () => {
       'CHT_NAMESPACE': ''
     });
 
-    let errMsg = undefined;
-    try {
-      Environment.getKubeConfigPath();
-    } catch (err) {
-      errMsg = err;
-    }
-
-    expect(errMsg).to.not.be.undefined;
+    expect(() => {Environment.getKubeConfigPath();}).to.throw(Error,'Could not get kube config path.');
   });
 
   it('LocalConfig returns null when there is a JSON parsing issue', () => {

@@ -5,7 +5,7 @@ import { IUpgradeMessage } from '../src/lib/upgrade-message';
 import { runCommand } from './utils/command-exec';
 import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
 import { expect } from 'chai';
-import { before, beforeEach } from 'mocha';
+import { before } from 'mocha';
 import sinon from 'sinon';
 import { V1Container, V1Deployment } from '@kubernetes/client-node';
 
@@ -39,7 +39,7 @@ describe('k8s-manager', () => {
       errMessage = err;
     }
 
-    expect(errMessage).to.not.be.undefined;
+    expect((errMessage as Error).message).to.contain(`Can't upgrade right now.`);
   });
 
   it('upgradeDeploymentContainers works as intended', async () => {
@@ -71,14 +71,14 @@ describe('k8s-manager', () => {
 
     sinon.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
 
-    let errMessage = undefined;
+    let errMessage: any;
     try {
       await k8sMgr.upgradeDeploymentContainers();
-    } catch (err) {
+    } catch (err: any) {
       errMessage = err;
     }
 
-    expect(errMessage).to.not.be.undefined;
+    expect((errMessage as Error).message).to.contain('Container name: wacko-image not found');
   });
 
   it('Shouldnt proceed with upgrade if all containers not ready', async () => {
@@ -94,7 +94,7 @@ describe('k8s-manager', () => {
       errMessage = err;
     }
 
-    expect(errMessage).to.not.be.undefined;
+    expect((errMessage as Error).message).to.contain(`Can't upgrade right now.`);
   });
 
   it('Throws an error when pulling a deployment object from non-existent namespace', async () => {
@@ -107,22 +107,20 @@ describe('k8s-manager', () => {
     } catch (err) {
       errMessage = err;
     }
-
-    expect(errMessage).to.not.be.undefined;
+    expect((errMessage as Error).message).to.contain('HTTP request failed');
   });
 
   it('Throws an error when pulling a deployment object from non-existent deployment', async () => {
     const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
     const k8sMgr = new K8sManager(tempNamespace, 'what-deployment', upgradeMessageArray);
-
+    
     let errMessage = undefined;
     try {
       await k8sMgr.pullDeploymentObject();
     } catch (err) {
       errMessage = err;
     }
-
-    expect(errMessage).to.not.be.undefined;
+    expect((errMessage as Error).message).to.contain('HTTP request failed');
   });
 
   it('Throws error when upgrade message invalid', () => {
@@ -135,7 +133,7 @@ describe('k8s-manager', () => {
       errMessage = err;
     }
 
-    expect(errMessage).to.not.be.undefined;
+    expect((errMessage as Error).message).to.contain('Upgrade message invalid.');
   });
 
   it('Can load config from cluster', () => {
@@ -175,7 +173,7 @@ describe('k8s-manager', () => {
       errMessage = err;
     }
 
-    expect(errMessage).to.not.be.undefined;
+    expect((errMessage as Error).message).to.contain(`Container name: missing-container not found in deployment spec.`);
   });
 
 });
