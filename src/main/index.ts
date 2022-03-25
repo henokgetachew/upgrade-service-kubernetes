@@ -27,10 +27,9 @@ app.post('/upgrade', async (req: any, res: any) => {
     const upgradeService = new UpgradeService(upgradeArr);
     const upgradeResponse = await upgradeService.upgradeDeployment();
     if(upgradeResponse.upgradeResult === UpgradeResult.Success) {
-      res.status(200).json({
+      return res.status(200).json({
         message: `Successfuly upgraded ${upgradeResponse.upgradeCount} containers`
       });
-      return;
     }
 
     console.error('Error during upgrade.', upgradeResponse.message);
@@ -49,11 +48,10 @@ app.get('/server-status',async (req: any, res: any) => {
   const upgradeService = new UpgradeService();
   const isDeploymentsReady = await upgradeService.isDeploymentReadyForUpgrades();
   if (isDeploymentsReady.ready) {
-    res.status(200).json({
+    return res.status(200).json({
       ready: isDeploymentsReady.ready,
       message: `Deployment is ready for upgrades`
     });
-    return;
   }
 
   res.status(200).json({
