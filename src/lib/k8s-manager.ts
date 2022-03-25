@@ -76,7 +76,7 @@ export default class K8sManager {
         container: k8s.V1Container
     }> {
     const deployment: k8s.V1Deployment = await this.pullDeploymentObject();
-    const container = deployment?.spec?.template?.spec?.containers.find(x => x.name === containerName);
+    const container = this.getContainerObject(deployment, containerName);
     if (container) {
       return {deployment, container};
     }
@@ -90,6 +90,10 @@ export default class K8sManager {
       }
     }
     throw new Error(`Container name: ${containerName} not found in deployment spec.`);
+  }
+
+  private getContainerObject(deployment: k8s.V1Deployment, containerName: string) {
+    return deployment?.spec?.template?.spec?.containers.find(x => x.name === containerName);
   }
 
   private async modifyContainerImageForDeployment(): Promise<k8s.V1Deployment[]> {
