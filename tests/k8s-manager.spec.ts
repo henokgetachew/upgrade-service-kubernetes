@@ -11,8 +11,6 @@ import { V1Container, V1Deployment } from '@kubernetes/client-node';
 
 describe('k8s-manager', () => {
 
-  let sandbox: sinon.SinonSandbox;
-
   before(async () => {
     await runCommand(
       `kubectl apply -f tests/resources/nginx.default.yaml`,
@@ -22,12 +20,8 @@ describe('k8s-manager', () => {
     await runCommand(`sleep 2`, 'Waiting a few seconds...');
   });
 
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   it('Role Based Access Policy Works', async () => {
@@ -52,7 +46,7 @@ describe('k8s-manager', () => {
     const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-    sandbox.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
+    sinon.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
 
     const versionBefore = await k8sMgr.getCurrentVersion('nginx');
     await k8sMgr.upgradeDeploymentContainers();
@@ -75,7 +69,7 @@ describe('k8s-manager', () => {
     const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'wacko-image', imageTag: '1.19'}];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-    sandbox.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
+    sinon.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
 
     let errMessage = undefined;
     try {
@@ -148,9 +142,9 @@ describe('k8s-manager', () => {
     const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'nginx', imageTag: '1.20' }];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-    sandbox.stub(Environment, 'runningWithinCluster').returns(true);
+    sinon.stub(Environment, 'runningWithinCluster').returns(true);
 
-    const kcStub = sandbox.stub(k8sMgr.kc, 'loadFromCluster').returns();
+    const kcStub = sinon.stub(k8sMgr.kc, 'loadFromCluster').returns();
 
     k8sMgr.setupKCWithKCPath();
     expect(kcStub.callCount).to.be.equal(1);

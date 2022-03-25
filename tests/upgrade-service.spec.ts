@@ -8,7 +8,6 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 describe('Upgrade Service', () => {
-  let sandbox: sinon.SinonSandbox;
 
   before(async () => {
     await runCommand(
@@ -17,12 +16,8 @@ describe('Upgrade Service', () => {
     await runCommand(`sleep 2`, 'Waiting a few seconds...');
   });
 
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   it('Constructs members correctly', ()=> {
@@ -38,7 +33,7 @@ describe('Upgrade Service', () => {
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
-    upgradeService.k8sMgr.areAllDeploymentsInReadyState = sandbox.stub().resolves({ 
+    upgradeService.k8sMgr.areAllDeploymentsInReadyState = sinon.stub().resolves({ 
       ready: true, podsNotReady: undefined 
     });
     const resultBefore = await upgradeService.getCurrentVersion('busybox');
@@ -67,7 +62,7 @@ describe('Upgrade Service', () => {
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
-    upgradeService.k8sMgr.upgradeDeploymentContainers = sandbox.stub().throwsException('Error yada yada');
+    upgradeService.k8sMgr.upgradeDeploymentContainers = sinon.stub().throwsException('Error yada yada');
     const response = await upgradeService.upgradeDeployment();
 
     expect(response.upgradeCount).to.be.equal(0);
@@ -80,7 +75,7 @@ describe('Upgrade Service', () => {
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
-    upgradeService.k8sMgr.upgradeDeploymentContainers = sandbox.stub().resolves([]);
+    upgradeService.k8sMgr.upgradeDeploymentContainers = sinon.stub().resolves([]);
     const response = await upgradeService.upgradeDeployment();
 
     expect(response.message).to.be.equal('Upgrade failed.');

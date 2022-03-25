@@ -1,18 +1,12 @@
 import Environment from '../src/lib/env-manager';
 import fs from 'fs';
 import { expect } from 'chai';
-import { beforeEach } from 'mocha';
 import sinon from 'sinon';
 
 describe('env-manager', () => {
-  let sandbox: sinon.SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
 
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   it('Default upgrade service port is 5008', () => {
@@ -32,7 +26,7 @@ describe('env-manager', () => {
   it('Can take namespace from config', () => {
     process.env.CHT_NAMESPACE = '';
 
-    const fsStub = sandbox.stub(fs, 'readFileSync').returns( JSON.stringify({
+    const fsStub = sinon.stub(fs, 'readFileSync').returns( JSON.stringify({
       KUBECONFIG_DEFAULT_PATH: '/Users/henok/.kube/config',
       CHT_DEPLOYMENT_NAME: 'test',
       CHT_NAMESPACE: 'test'}));
@@ -44,14 +38,14 @@ describe('env-manager', () => {
   it('Can take namespace from cluster', () => {
     process.env.CHT_NAMESPACE = '';
 
-    sandbox.stub(Environment, 'runningWithinCluster').returns(true);
-    sandbox.stub(Environment, 'localConfig').returns({
+    sinon.stub(Environment, 'runningWithinCluster').returns(true);
+    sinon.stub(Environment, 'localConfig').returns({
       'KUBECONFIG_DEFAULT_PATH': '',
       'CHT_DEPLOYMENT_NAME': '',
       'CHT_NAMESPACE': ''
     });
 
-    const spy = sandbox.stub(fs, 'readFileSync').returns('test-cluster-namespace');
+    const spy = sinon.stub(fs, 'readFileSync').returns('test-cluster-namespace');
 
     expect(Environment.getNamespace()).to.be.equal('test-cluster-namespace');
     expect(spy.calledOnce);
@@ -59,10 +53,10 @@ describe('env-manager', () => {
   });
 
   it('Throws error when namespace not found', () => {
-    sandbox.stub(Environment, 'runningWithinCluster').returns(false);
+    sinon.stub(Environment, 'runningWithinCluster').returns(false);
     process.env.CHT_NAMESPACE = '';
 
-    sandbox.stub(fs, 'readFileSync').returns(JSON.stringify({
+    sinon.stub(fs, 'readFileSync').returns(JSON.stringify({
       KUBECONFIG_DEFAULT_PATH: '/Users/henok/.kube/config',
       CHT_DEPLOYMENT_NAME: '',
       CHT_NAMESPACE: ''
@@ -79,16 +73,16 @@ describe('env-manager', () => {
   });
 
   it('Throws error when namespace file missing in cluster', () => {
-    sandbox.stub(Environment, 'runningWithinCluster').returns(true);
+    sinon.stub(Environment, 'runningWithinCluster').returns(true);
     process.env.CHT_NAMESPACE = '';
 
-    sandbox.stub(Environment, 'localConfig').returns({
+    sinon.stub(Environment, 'localConfig').returns({
       'KUBECONFIG_DEFAULT_PATH': '',
       'CHT_DEPLOYMENT_NAME': '',
       'CHT_NAMESPACE': ''
     });
 
-    sandbox.stub(fs, 'readFileSync').throwsException('File not found!');
+    sinon.stub(fs, 'readFileSync').throwsException('File not found!');
 
     let errMsg = undefined;
     let namespace = undefined;
@@ -103,7 +97,7 @@ describe('env-manager', () => {
   });
 
   it('Determines if running within a cluster', () => {
-    const spyFS = sandbox.stub(fs, 'existsSync').returns(true);
+    const spyFS = sinon.stub(fs, 'existsSync').returns(true);
     expect(Environment.runningWithinCluster()).to.be.equal(true);
     expect(spyFS.calledOnce);
     expect(spyFS.calledWith('/var/run/secrets/kubernetes.io/serviceaccount/token'));
@@ -120,7 +114,7 @@ describe('env-manager', () => {
 
   it('Takes CHT Deployment name from config', () => {
     process.env.CHT_DEPLOYMENT_NAME = '';
-    sandbox.stub(Environment, 'localConfig').returns({
+    sinon.stub(Environment, 'localConfig').returns({
       'KUBECONFIG_DEFAULT_PATH': '',
       'CHT_DEPLOYMENT_NAME': 'On-hey-there',
       'CHT_NAMESPACE': ''
@@ -131,7 +125,7 @@ describe('env-manager', () => {
 
   it('Throws an error when deployment name not found', () => {
     process.env.CHT_DEPLOYMENT_NAME = '';
-    sandbox.stub(Environment, 'localConfig').returns({
+    sinon.stub(Environment, 'localConfig').returns({
       'KUBECONFIG_DEFAULT_PATH': '',
       'CHT_DEPLOYMENT_NAME': '',
       'CHT_NAMESPACE': ''
@@ -150,7 +144,7 @@ describe('env-manager', () => {
   });
 
   it('Throws an error when looking for path when running within cluster', () => {
-    sandbox.stub(Environment, 'runningWithinCluster').returns(true);
+    sinon.stub(Environment, 'runningWithinCluster').returns(true);
 
     let errMsg = undefined;
     try {
@@ -163,14 +157,14 @@ describe('env-manager', () => {
   });
 
   it('Correctly returns kubeconfig in test automation', () => {
-    sandbox.stub(Environment, 'runningWithinCluster').returns(false);
+    sinon.stub(Environment, 'runningWithinCluster').returns(false);
     expect(Environment.getKubeConfigPath()).to.contain('.kube/config');
   });
 
   it('Correctly obtains kubeconfig from env var', () => {
-    sandbox.stub(Environment, 'runningWithinCluster').returns(false);
+    sinon.stub(Environment, 'runningWithinCluster').returns(false);
 
-    sandbox.stub(Environment, 'runningWithinTestAutomation').returns(false);
+    sinon.stub(Environment, 'runningWithinTestAutomation').returns(false);
 
     process.env.KUBECONFIG = 'a-test-config-path';
 
@@ -178,13 +172,13 @@ describe('env-manager', () => {
   });
 
   it('Throws error when kubeconfig path not found', () => {
-    sandbox.stub(Environment, 'runningWithinCluster').returns(false);
+    sinon.stub(Environment, 'runningWithinCluster').returns(false);
 
-    sandbox.stub(Environment, 'runningWithinTestAutomation').returns(false);
+    sinon.stub(Environment, 'runningWithinTestAutomation').returns(false);
 
     process.env.KUBECONFIG = '';
 
-    sandbox.stub(Environment, 'localConfig').returns({
+    sinon.stub(Environment, 'localConfig').returns({
       'KUBECONFIG_DEFAULT_PATH': '',
       'CHT_DEPLOYMENT_NAME': '',
       'CHT_NAMESPACE': ''
@@ -201,7 +195,7 @@ describe('env-manager', () => {
   });
 
   it('LocalConfig returns null when there is a JSON parsing issue', () => {
-    sandbox.stub(JSON, 'parse').throwsException('JSON Parsing Error');
+    sinon.stub(JSON, 'parse').throwsException('JSON Parsing Error');
     expect(Environment.localConfig()).to.be.null;
   });
 });
