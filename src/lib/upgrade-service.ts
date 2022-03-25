@@ -12,8 +12,8 @@ export default class UpgradeService {
   constructor(upgradeArray?: Array<IUpgradeMessage>, namespace?: string, deploymentName?: string) {
     this.upgradeArray = upgradeArray || [];
     this.k8sMgr = new K8sManager(namespace ||
-            Environment.getNamespace(), deploymentName ||
-            Environment.getDeploymentName(), this.upgradeArray);
+      Environment.getNamespace(), deploymentName ||
+    Environment.getDeploymentName(), this.upgradeArray);
   }
 
   async getCurrentVersion(container: string): Promise<string> {
@@ -21,39 +21,47 @@ export default class UpgradeService {
   }
 
   upgradeSuccess(count: number) {
-    return {upgradeResult: UpgradeResult.Success,
+    return {
+      upgradeResult: UpgradeResult.Success,
       upgradeCount: count,
-      message: 'Successfuly upgraded'};
+      message: 'Successfuly upgraded'
+    };
   }
 
   upgradeFailure(message?: string) {
-    return {upgradeResult: UpgradeResult.Failure,
+    return {
+      upgradeResult: UpgradeResult.Failure,
       upgradeCount: 0,
-      message: message || 'Upgrade failed.'};
+      message: message || 'Upgrade failed.'
+    };
   }
 
   async upgradeDeployment(): Promise<{
-        upgradeResult: UpgradeResult,
-        upgradeCount: number,
-        message: string
-    }> {
+    upgradeResult: UpgradeResult,
+    upgradeCount: number,
+    message: string
+  }> {
     try {
       const deployments: V1Deployment[] = await this.k8sMgr.upgradeDeploymentContainers();
-      if (deployments.length > 0 ) {
+      if (deployments.length > 0) {
         return this.upgradeSuccess(deployments.length);
       }
       return this.upgradeFailure();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch(err: any){
+    } catch (err: any) {
       console.error('Error while upgrading deployment containers', err);
       return this.upgradeFailure(err.toString());
     }
   }
 
-  isDeploymentReadyForUpgrades(): Promise<{ready: boolean,
-        podsNotReady?: Array<{podName?: string,
-          state?: string,
-          containersNotReady?: V1ContainerStatus[]}>}> {
+  isDeploymentReadyForUpgrades(): Promise<{
+    ready: boolean,
+    podsNotReady?: Array<{
+      podName?: string,
+      state?: string,
+      containersNotReady?: V1ContainerStatus[]
+    }>
+  }> {
 
     return this.k8sMgr.areAllDeploymentsInReadyState();
   }
