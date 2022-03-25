@@ -12,7 +12,6 @@ export default class Environment {
       const config = JSON.parse(fs.readFileSync(localConfigPath).toString());
       return config;
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(`Error when parsing local config file: ${err}`);
       return null;
     }

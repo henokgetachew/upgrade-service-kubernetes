@@ -45,7 +45,6 @@ export default class UpgradeService {
       return this.upgradeFailure();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch(err: any){
-      // eslint-disable-next-line no-console
       console.error('Error while upgrading deployment containers', err);
       return this.upgradeFailure(err.toString());
     }

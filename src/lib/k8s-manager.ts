@@ -26,7 +26,6 @@ export default class K8sManager {
             Payload needs to be an array in the following format: [{containerName: <>, imageTag: <>}]
             Not Valid: ${invalidUpgradeMessages.toString()}`;
 
-      // eslint-disable-next-line no-console
       console.error(errMessage);
       throw new Error(errMessage);
     }

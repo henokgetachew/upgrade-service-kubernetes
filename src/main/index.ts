@@ -65,4 +65,6 @@ app.get('/server-status',async (req: any, res: any) => {
 const port = Environment.getUpgradeServicePort();
 console.log(`Listening on port ${port}`);
 
+export default app;
+
 app.listen(port);
