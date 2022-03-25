@@ -51,7 +51,7 @@ export default class UpgradeService {
   }
 
   isDeploymentReadyForUpgrades(): Promise<{ready: boolean,
-        podsNotReady?: Array<{podNotReady?: string,
+        podsNotReady?: Array<{podName?: string,
           state?: string,
           containersNotReady?: V1ContainerStatus[]}>}> {
 

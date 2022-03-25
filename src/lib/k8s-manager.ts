@@ -125,12 +125,12 @@ export default class K8sManager {
   }
 
   async areAllDeploymentsInReadyState(): Promise<{ready: boolean,
-        podsNotReady?: Array<{podNotReady?: string,
+        podsNotReady?: Array<{podName?: string,
           state?: string,
           containersNotReady?: V1ContainerStatus[]}>}> {
 
     const pods: k8s.V1PodList = (await this.k8sCoreV1Api.listNamespacedPod(this.namespace)).body;
-    const podsNotReady: Array<{podNotReady?: string,
+    const podsNotReady: Array<{podName?: string,
             state?: string, containersNotReady?: V1ContainerStatus[]}> = [];
 
     pods.items.forEach((pod => {
@@ -139,7 +139,7 @@ export default class K8sManager {
       const pendingStatus = pod.status?.phase === 'Pending';
       if(notReadyContainers?.length || pendingStatus) {
         podsNotReady.push(
-          {podNotReady: pod.metadata?.name, state: pod.status?.phase, containersNotReady: notReadyContainers}
+          {podName: pod.metadata?.name, state: pod.status?.phase, containersNotReady: notReadyContainers}
         );
       }
     }));
