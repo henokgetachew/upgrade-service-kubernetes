@@ -15,7 +15,7 @@ describe('The API', () => {
     process.env.CHT_NAMESPACE = tempNamespace;
     process.env.CHT_DEPLOYMENT_NAME = k8s_deployment_name;
     await runCommand(
-      `kubectl -n ${tempNamespace} apply -f src/__tests__/resources/alpine.yaml`,
+      `kubectl -n ${tempNamespace} apply -f tests/resources/alpine.yaml`,
       'Creating an alpine deployment');
     await runCommand(`sleep 10`, 'Waiting a few seconds...');
   });
