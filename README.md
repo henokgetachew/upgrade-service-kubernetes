@@ -4,6 +4,8 @@
 
 [![Tests](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/main.yml)
 
+[![Tests](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/e2e.yml/badge.svg?branch=master)](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/e2e.yml)
+
 This tool provides an image that you can use to upgrade your pods in your kubernetes cluster. 
 
 ## Endpoint
