@@ -33,7 +33,7 @@ describe('Upgrade Service', () => {
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
-    upgradeService.k8sMgr.areAllDeploymentsInReadyState = sinon.stub().resolves({ 
+    sinon.stub(upgradeService.k8sMgr, 'areAllDeploymentsInReadyState').resolves({
       ready: true, podsNotReady: undefined 
     });
     const resultBefore = await upgradeService.getCurrentVersion('busybox');
@@ -62,7 +62,7 @@ describe('Upgrade Service', () => {
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
-    upgradeService.k8sMgr.upgradeDeploymentContainers = sinon.stub().throwsException('Error yada yada');
+    sinon.stub(upgradeService.k8sMgr, 'upgradeDeploymentContainers').throwsException('Error yada yada');
     const response = await upgradeService.upgradeDeployment();
 
     expect(response.upgradeCount).to.be.equal(0);
@@ -75,7 +75,7 @@ describe('Upgrade Service', () => {
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
-    upgradeService.k8sMgr.upgradeDeploymentContainers = sinon.stub().resolves([]);
+    sinon.stub(upgradeService.k8sMgr, 'upgradeDeploymentContainers').resolves([]);
     const response = await upgradeService.upgradeDeployment();
 
     expect(response.message).to.be.equal('Upgrade failed.');
