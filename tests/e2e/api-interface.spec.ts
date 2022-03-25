@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import chaiHttp from 'chai-http';
 import sinon from 'sinon';
-import { runCommand } from '../../src/utils/command-exec';
+import { runCommand } from '../utils/command-exec';
 import { tempNamespace, k8s_deployment_name } from '../../tests/resources/test-constants';
 import { IUpgradeMessage } from '../../src/lib/upgrade-message';
 

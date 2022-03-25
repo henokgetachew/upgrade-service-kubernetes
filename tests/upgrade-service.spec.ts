@@ -1,5 +1,5 @@
 import { IUpgradeMessage } from '../src/lib/upgrade-message';
-import { runCommand } from '../src/utils/command-exec';
+import { runCommand } from './utils/command-exec';
 import UpgradeService from '../src/lib/upgrade-service';
 import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
 import { UpgradeResult } from '../src/lib/upgrade-result';

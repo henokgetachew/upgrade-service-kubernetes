@@ -2,7 +2,7 @@
 import Environment from '../src/lib/env-manager';
 import K8sManager from '../src/lib/k8s-manager';
 import { IUpgradeMessage } from '../src/lib/upgrade-message';
-import { runCommand } from '../src/utils/command-exec';
+import { runCommand } from './utils/command-exec';
 import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
 import { expect } from 'chai';
 import { before, beforeEach } from 'mocha';
