@@ -1,5 +1,5 @@
 import * as k8s from '@kubernetes/client-node';
-import { V1ContainerStatus } from '@kubernetes/client-node';
+import { IDeploymentReadiness, IPodNotReady } from './deployment-readiness';
 import Environment from './env-manager';
 import { IUpgradeMessage } from './upgrade-message';
 
@@ -128,31 +128,33 @@ export default class K8sManager {
     return succesfullyUpgraded;
   }
 
-  async areAllDeploymentsInReadyState(): Promise<{ready: boolean,
-        podsNotReady?: Array<{podName?: string,
-          state?: string,
-          containersNotReady?: V1ContainerStatus[]}>}> {
-
-    const pods: k8s.V1PodList = (await this.k8sCoreV1Api.listNamespacedPod(this.namespace)).body;
-    const podsNotReady: Array<{podName?: string,
-            state?: string, containersNotReady?: V1ContainerStatus[]}> = [];
+  async areAllDeploymentsInReadyState(): Promise<IDeploymentReadiness> {
+    let deploymentReadiness: IDeploymentReadiness;
+    const v1PodList = await this.k8sCoreV1Api.listNamespacedPod(this.namespace);
+    const pods: k8s.V1PodList = v1PodList.body;
+    const podsNotReady: IPodNotReady[] = [];
 
     pods.items.forEach((pod => {
       const notReadyContainers = pod.status?.containerStatuses?.filter(
         container => container.state !== k8s.V1ContainerStateRunning);
       const pendingStatus = pod.status?.phase === 'Pending';
       if(notReadyContainers?.length || pendingStatus) {
-        podsNotReady.push(
-          {podName: pod.metadata?.name, state: pod.status?.phase, containersNotReady: notReadyContainers}
-        );
+        const podNotReady: IPodNotReady = {
+          podName: pod.metadata?.name,
+          state: pod.status?.phase,
+          containersNotReady: notReadyContainers
+        };
+        podsNotReady.push(podNotReady);
       }
     }));
 
     if(podsNotReady.length) {
-      return {ready: false, podsNotReady: podsNotReady};
+      deploymentReadiness = {ready: false, podsNotReady: podsNotReady};
+      return deploymentReadiness;
     }
 
-    return { ready: true};
+    deploymentReadiness = { ready: true};
+    return deploymentReadiness;
   }
 
   async getCurrentVersion(container: string): Promise<string> {

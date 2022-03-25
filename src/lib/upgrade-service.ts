@@ -1,8 +1,9 @@
 import Environment from './env-manager';
 import { IUpgradeMessage } from './upgrade-message';
 import K8sManager from './k8s-manager';
-import { V1ContainerStatus, V1Deployment } from '@kubernetes/client-node';
 import { UpgradeResult } from './upgrade-result';
+import { IDeploymentReadiness } from './deployment-readiness';
+import { V1Deployment } from '@kubernetes/client-node';
 
 export default class UpgradeService {
 
@@ -54,15 +55,7 @@ export default class UpgradeService {
     }
   }
 
-  isDeploymentReadyForUpgrades(): Promise<{
-    ready: boolean,
-    podsNotReady?: Array<{
-      podName?: string,
-      state?: string,
-      containersNotReady?: V1ContainerStatus[]
-    }>
-  }> {
-
+  isDeploymentReadyForUpgrades(): Promise<IDeploymentReadiness> {
     return this.k8sMgr.areAllDeploymentsInReadyState();
   }
 }
