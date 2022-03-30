@@ -89,7 +89,7 @@ export default class K8sManager {
   }
 
   private getContainerObject(deployment: k8s.V1Deployment, containerName: string) {
-    return deployment?.spec?.template?.spec?.containers.find(x => x.name === containerName);
+    return deployment?.spec?.template?.spec?.containers.find(container => container.name === containerName);
   }
 
   private async modifyContainerImageForDeployment(): Promise<k8s.V1Deployment[]> {
