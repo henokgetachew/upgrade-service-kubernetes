@@ -51,12 +51,7 @@ export default class K8sManager {
   }
 
   private filterInvalidUpgradePairs(): Array<IUpgradeMessage> {
-    const invalidUpgradeMessages: Array<IUpgradeMessage> = [];
-    for(const containerVersionPair of this.upgradeMessage) {
-      if(!containerVersionPair.containerName || !containerVersionPair.imageTag) {
-        invalidUpgradeMessages.push(containerVersionPair);
-      }
-    }
+return this.upgradeMessage.filter(containerVersionPair => !containerVersionPair.containerName || !containerVersionPair.imageTag);
     return invalidUpgradeMessages;
   }
 
