@@ -32,7 +32,9 @@ export default class Environment {
         namespace = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace').toString();
       }  
     } catch (err) {
-      throw new Error('Namespace could not be determined.');
+      const error = (err as Error);
+      throw new Error(`Namespace could not be determined. 
+        Error Name: ${error.name} Message: ${error.message}`);
     }
 
     if (!namespace) {
