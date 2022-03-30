@@ -80,7 +80,7 @@ export default class K8sManager {
     // Look for the container in the other deployments within the same namespace
     const deployments: k8s.V1DeploymentList = await this.getDeploymentsList();
     for (const deployment of deployments.items) {
-      const container = deployment?.spec?.template?.spec?.containers.find(x => x.name === containerName);
+      const container = this.getContainerObject(deployment, containerName);
       if (container) {
         return {deployment, container};
       }
