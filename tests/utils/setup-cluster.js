@@ -13,7 +13,7 @@ async function createDeployment() {
 }
 
 async function createNamespace() {
-  await runCommand(`kubectl create namespace ${tempNamespace}`, 'Creating test namespace k8s-cht-deployment');
+  await runCommand(`kubectl create namespace ${tempNamespace}`, `Creating test namespace ${tempNamespace}`);
 }
 
 async function importImage() {

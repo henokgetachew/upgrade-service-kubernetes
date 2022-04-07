@@ -68,9 +68,7 @@ describe('env-manager', () => {
       CHT_NAMESPACE: ''
     }));
 
-    expect(() => {
-      Environment.getNamespace();
-    }).to.throw(Error, 'Namespace could not be determined.');
+    expect(Environment.getNamespace).to.throw(Error, 'Namespace could not be determined.');
   });
 
   it('Throws error when namespace file missing in cluster', () => {
@@ -144,17 +142,7 @@ describe('env-manager', () => {
 
   it('Throws an error when looking for path when running within cluster', () => {
     sinon.stub(Environment, 'runningWithinCluster').returns(true);
-
-    let errMsg = undefined;
-    try {
-      Environment.getKubeConfigPath();
-    } catch (err) {
-      errMsg = err;
-    }
-
-    expect(() => {
-      Environment.getKubeConfigPath();
-    }).to.throw(Error, 'Runing within cluster. Load config from cluster.');
+    expect(Environment.getKubeConfigPath).to.throw(Error, 'Runing within cluster. Load config from cluster.');
   });
 
   it('Correctly returns kubeconfig in test automation', () => {
@@ -185,7 +173,7 @@ describe('env-manager', () => {
       'CHT_NAMESPACE': ''
     });
 
-    expect(() => {Environment.getKubeConfigPath();}).to.throw(Error,'Could not get kube config path.');
+    expect(Environment.getKubeConfigPath).to.throw(Error,'Could not get kube config path.');
   });
 
   it('LocalConfig returns null when there is a JSON parsing issue', () => {
