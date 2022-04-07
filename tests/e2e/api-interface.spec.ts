@@ -15,7 +15,7 @@ describe('The API', () => {
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/alpine.yaml`,
       'Creating an alpine deployment');
-    await runCommand(`sleep 10`, 'Waiting a few seconds...');
+    await runCommand(`sleep 20`, 'Waiting a few seconds...');
   });
 
   after(() => {
