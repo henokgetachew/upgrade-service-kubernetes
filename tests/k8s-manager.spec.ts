@@ -29,7 +29,7 @@ describe('k8s-manager', () => {
         We shouldn't be able to upgrade deployments in different namespaces.
         */
 
-    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx-default', imageTag: '1.20'}];
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx-default', imageTag: 'nginx:1.20'}];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
     let errMessage: any = undefined;
         
@@ -43,7 +43,7 @@ describe('k8s-manager', () => {
   });
 
   it('upgradeDeploymentContainers works as intended', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: 'nginx:1.19'}];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
     sinon.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
@@ -57,7 +57,7 @@ describe('k8s-manager', () => {
   });
 
   it('Can pull deployment object', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: 'nginx:1.19'}];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
     const deployment = await k8sMgr.pullDeploymentObject();
@@ -66,7 +66,7 @@ describe('k8s-manager', () => {
   });
 
   it('Upgrade throws error when image not found', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'wacko-image', imageTag: '1.19'}];
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'wacko-image', imageTag: 'wacko-image:1.19'}];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
     sinon.stub(k8sMgr, 'areAllDeploymentsInReadyState').resolves({ready: true, podsNotReady: undefined});
@@ -85,7 +85,8 @@ describe('k8s-manager', () => {
     await runCommand(
       `kubectl -n ${tempNamespace} run container-zoro --image=busybox:1.xx`,
       'Creating a non working image...');
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'container-zoro', imageTag: '1.20' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [
+      { containerName: 'container-zoro', imageTag: 'container-zoro:1.20' }];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
     let errMessage = undefined;
     try {
@@ -98,7 +99,7 @@ describe('k8s-manager', () => {
   });
 
   it('Throws an error when pulling a deployment object from non-existent namespace', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: 'nginx:1.19'}];
     const k8sMgr = new K8sManager('what-namespace', k8s_deployment_name, upgradeMessageArray);
 
     let errMessage = undefined;
@@ -111,7 +112,7 @@ describe('k8s-manager', () => {
   });
 
   it('Throws an error when pulling a deployment object from non-existent deployment', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: '1.19'}];
+    const upgradeMessageArray: IUpgradeMessage[] = [{containerName: 'nginx', imageTag: 'nginx:1.19'}];
     const k8sMgr = new K8sManager(tempNamespace, 'what-deployment', upgradeMessageArray);
     
     let errMessage = undefined;

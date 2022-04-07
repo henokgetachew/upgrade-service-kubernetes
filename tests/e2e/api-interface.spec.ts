@@ -56,7 +56,7 @@ describe('The API', () => {
   });
 
   it('Should upgrade deployment', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'alpine', imageTag: '3.15.0' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'alpine', imageTag: 'alpine:3.15.0' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 

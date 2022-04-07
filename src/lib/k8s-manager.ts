@@ -98,7 +98,7 @@ export default class K8sManager {
       const imageTag = containerVersionPair.imageTag;
 
       const { deployment, container } = await this.getContainerInNamespace(containerName);
-      container.image = container?.image?.replace(/:.*/, `:${imageTag}`);
+      container.image = imageTag;
       this.upgradedDeployments.push(deployment);
     }
     return this.upgradedDeployments;
