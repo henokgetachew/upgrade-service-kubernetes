@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express from 'express';
 import * as bodyParser from 'body-parser';
-import {IUpgradeMessage} from '../lib/upgrade-message';
+import {IUpgradeJSONPayload} from '../lib/upgrade-message';
 import UpgradeService from '../lib/upgrade-service';
 import Environment from '../lib/env-manager';
 import {UpgradeResult} from '../lib/upgrade-result';
@@ -23,8 +23,8 @@ app.post('/upgrade', async (req: any, res: any) => {
   console.log(req.body);
 
   try {
-    const upgradeArr: Array<IUpgradeMessage> = req.body;
-    const upgradeService = new UpgradeService(upgradeArr);
+    const upgradePayload: IUpgradeJSONPayload = req.body;
+    const upgradeService = new UpgradeService(upgradePayload.containers);
     const upgradeResponse = await upgradeService.upgradeDeployment();
     if(upgradeResponse.upgradeResult === UpgradeResult.Success) {
       return res.status(200).json({
