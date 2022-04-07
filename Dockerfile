@@ -13,7 +13,7 @@ COPY package.json .
 COPY package-lock.json .
 
 RUN npm ci
-ADD . /usr/src/app
+ADD ./src /usr/src/app
 
 CMD [ "npm", "start" ]
 EXPOSE 5008
