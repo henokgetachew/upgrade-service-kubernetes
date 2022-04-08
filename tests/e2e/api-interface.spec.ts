@@ -66,6 +66,7 @@ describe('The API', () => {
       .send(upgradeMessageArray)
       .then(async res => {
         expect(res).to.have.status(200);
+        await runCommand(`sleep 30`, 'Waiting a few seconds...');
         const result = await upgradeService.getCurrentVersion('busybox');
         console.log(`Is upgrade working? ${result}`);
         expect(result).to.contain('1.35');
