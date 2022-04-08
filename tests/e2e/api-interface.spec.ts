@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import chaiHttp from 'chai-http';
 import { runCommand } from '../utils/command-exec';
 import { tempNamespace, k8s_deployment_name } from '../../tests/resources/test-constants';
-import { IUpgradeMessage } from '../../src/lib/upgrade-message';
+import { IUpgradeJSONPayload } from '../../src/lib/upgrade-message';
 import UpgradeService from '../../src/lib/upgrade-service';
 
 chai.use(chaiHttp);
@@ -56,14 +56,18 @@ describe('The API', () => {
   });
 
   it('Should upgrade deployment', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'busybox', imageTag: 'busybox:1.35' }];
+    const upgradeMessagePayload: IUpgradeJSONPayload = {
+      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.35' }],
+      dockerCompose: JSON.parse('[]')
+    };
+    const upgradeMessageArray = upgradeMessagePayload.containers;
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
     await runCommand(`sleep 200`, 'Waiting ...');
 
     return chai.request('http://localhost:5008')
       .post('/upgrade')
-      .send(upgradeMessageArray)
+      .send(upgradeMessagePayload)
       .then(async res => {
         expect(res).to.have.status(200);
         await runCommand(`sleep 30`, 'Waiting a few seconds...');
