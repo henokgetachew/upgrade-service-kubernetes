@@ -27,7 +27,7 @@ describe('The API', () => {
     return chai.request('http://localhost:5008').get('/')
       .then(res => {
         expect(res).to.have.status(200);
-        expect(res.get('message')).to.be.equal('Upgrade service working.');
+        expect(res.body.message).to.be.equal('Upgrade service working.');
       });
   });
 
@@ -43,7 +43,7 @@ describe('The API', () => {
     return chai.request('http://localhost:5008')
       .get('/server-status')
       .then(res => {
-        expect(res.get('ready')).to.not.be.undefined;
+        expect(res.body.ready).to.not.be.undefined;
       });
   });
 
@@ -51,7 +51,7 @@ describe('The API', () => {
     return chai.request('http://localhost:5008')
       .get('/server-status')
       .then(res => {
-        expect(res.get('message')).to.not.be.undefined;
+        expect(res.body.message).to.not.be.undefined;
       });
   });
 
