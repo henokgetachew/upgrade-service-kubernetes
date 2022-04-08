@@ -26,16 +26,16 @@ async function createCluster() {
     `k3d cluster create ${tempCluster} --port 5008:30008@loadbalancer`, 'Creating temporary test cluster ...');
 }
 
-async function buildLatestImage() {
+async function buildLocalImage() {
   try {
-    await runCommand(`docker build . -t medicmobile/upgrade-service`, 'Building latest image.');
+    await runCommand(`docker build . -t medicmobile/upgrade-service:local`, 'Building local image.');
   } catch(err) {
     console.error('Error thrown', err);
   }
 }
 
 const initialize = async () => {
-  await buildLatestImage();
+  await buildLocalImage();
   await createCluster();
   await importImage();
   await createNamespace();
@@ -45,7 +45,7 @@ const initialize = async () => {
 };
 
 const initializeAssumeClusterAlreadyExists = async () => {
-  await buildLatestImage();
+  await buildLocalImage();
   await importImage();
   await createNamespace();
   await createDeployment();

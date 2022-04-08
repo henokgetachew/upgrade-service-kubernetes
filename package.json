@@ -12,7 +12,7 @@
     "e2e": "./tests/utils/init && NODE_ENV=test ./node_modules/mocha/bin/mocha  --timeout 30000 --require ts-node/register ./tests/e2e/*.spec.ts || true && ./tests/utils/destroy || true",
     "e2e-on-pre-existing-cluster": "./tests/utils/init-assume-cluster-exists && NODE_ENV=test ./node_modules/mocha/bin/mocha  --timeout 30000 --require ts-node/register ./tests/e2e/*.spec.ts",
     "build-docker-image": "docker build . -t medicmobile/upgrade-service:0.26",
-    "build-docker-image-latest": "docker build . -t medicmobile/upgrade-service"
+    "build-docker-image-local": "docker build . -t medicmobile/upgrade-service:local"
   },
   "author": "Henok",
   "license": "ISC",
