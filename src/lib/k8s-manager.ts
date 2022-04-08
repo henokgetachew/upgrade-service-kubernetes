@@ -132,7 +132,7 @@ export default class K8sManager {
 
     pods.items.forEach((pod => {
       const notReadyContainers = pod.status?.containerStatuses?.filter(
-        container => container.state !== k8s.V1ContainerStateRunning);
+        container => container.state?.running === undefined);
       const pendingStatus = pod.status?.phase === 'Pending';
       if(notReadyContainers?.length || pendingStatus) {
         const podNotReady: IPodNotReady = {
