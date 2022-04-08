@@ -13,8 +13,8 @@ describe('The API', () => {
     process.env.CHT_NAMESPACE = tempNamespace;
     process.env.CHT_DEPLOYMENT_NAME = k8s_deployment_name;
     await runCommand(
-      `kubectl -n ${tempNamespace} apply -f tests/resources/nginx.yaml`,
-      'Creating an nginx deployment');
+      `kubectl -n ${tempNamespace} apply -f tests/resources/busybox.yaml`,
+      'Creating a busybox deployment');
     await runCommand(`sleep 20`, 'Waiting a few seconds...');
   });
 
@@ -56,7 +56,7 @@ describe('The API', () => {
   });
 
   it('Should upgrade deployment', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'nginx', imageTag: 'nginx:1.21' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'busybox', imageTag: 'busybox:1.35' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
     await runCommand(`sleep 30`, 'Waiting a few seconds...');
@@ -66,9 +66,9 @@ describe('The API', () => {
       .send(upgradeMessageArray)
       .then(async res => {
         expect(res).to.have.status(200);
-        const result = await upgradeService.getCurrentVersion('nginx');
+        const result = await upgradeService.getCurrentVersion('busybox');
         console.log(`Is upgrade working? ${result}`);
-        expect(result).to.contain('1.21');
+        expect(result).to.contain('1.35');
       });
   });
 });
