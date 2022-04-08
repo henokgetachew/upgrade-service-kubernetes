@@ -64,12 +64,15 @@ Let's deploy `nginx` with version tag 1.20 and we'll have the upgrade-service up
 2. Send the following curl command
 
 ```
-curl -X POST -H "Content-Type: application/json" -d '[
-  {
-    "containerName": "nginx",
-    "imageTag": "1.21"
-  }
-]' localhost:5008/upgrade
+curl -X POST -H "Content-Type: application/json" -d '{
+  "containers": [
+    { 
+      "containerName": "busybox", 
+      "imageTag": "busybox:1.35" 
+    }
+  ], 
+  "dockerCompose": []
+}'  localhost:5008/upgrade
 ```
 
 You should get the response from the server stating that upgrade succeeded.
