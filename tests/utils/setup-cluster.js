@@ -17,7 +17,7 @@ async function createNamespace() {
 }
 
 async function importImage() {
-  await runCommand(`k3d image import medicmobile/upgrade-service:latest -c ${tempCluster}`,
+  await runCommand(`k3d image import medicmobile/upgrade-service:local -c ${tempCluster}`,
     'Importing docker image...');
 }
 
