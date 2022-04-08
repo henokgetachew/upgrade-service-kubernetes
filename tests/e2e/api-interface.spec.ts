@@ -59,7 +59,7 @@ describe('The API', () => {
     const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'busybox', imageTag: 'busybox:1.35' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
-    await runCommand(`sleep 30`, 'Waiting a few seconds...');
+    await runCommand(`sleep 60`, 'Waiting a few seconds...');
 
     return chai.request('http://localhost:5008')
       .post('/upgrade')
