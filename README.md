@@ -16,12 +16,15 @@ To upgrade pods, send a `POST` request to `/upgrade` endpoint for sending upgrad
 This is the payload structure:
 
 ```
-[
-    {
-        "containerName": "medic-api",
-        "imageTag": "3.05"
+{
+  "containers": [
+    { 
+      "containerName": "medic-api",
+      "imageTag": "medic-api:3.05" 
     }
-]
+  ], 
+  "dockerCompose": []
+}
 ```
 
 Multiple upgrade requests can be sent in the same payload by adding more elements to the array using the same format above.
