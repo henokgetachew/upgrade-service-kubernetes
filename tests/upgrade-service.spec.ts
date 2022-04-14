@@ -67,7 +67,7 @@ describe('Upgrade Service', () => {
 
     expect(response.upgradeCount).to.be.equal(0);
     expect(response.upgradeResult).to.be.equal(UpgradeResult.Failure);
-    expect(response.message).not.to.be.undefined;
+    expect(response.message).to.be.equal('Error yada yada');
   });
 
   it('Correctly lets us know when no containers upgraded', async () => {
