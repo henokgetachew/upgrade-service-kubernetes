@@ -4,6 +4,7 @@ import { runCommand } from '../utils/command-exec';
 import { tempNamespace, k8s_deployment_name } from '../../tests/resources/test-constants';
 import { IUpgradeJSONPayload } from '../../src/lib/upgrade-message';
 import UpgradeService from '../../src/lib/upgrade-service';
+import { setTimeout } from 'timers/promises';
 
 chai.use(chaiHttp);
 
@@ -15,7 +16,8 @@ describe('The API', () => {
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox.yaml`,
       'Creating a busybox deployment');
-    await runCommand(`sleep 20`, 'Waiting a few seconds...');
+    console.log('Waiting for ~ 3 minutes - until pods finish creation.');
+    await setTimeout(220000);
   });
 
   after(() => {
@@ -43,15 +45,10 @@ describe('The API', () => {
     return chai.request('http://localhost:5008')
       .get('/server-status')
       .then(res => {
-        expect(res.body.ready).to.not.be.undefined;
-      });
-  });
-
-  it('Server status endpoint returns deployment readiness detail message', () => {
-    return chai.request('http://localhost:5008')
-      .get('/server-status')
-      .then(res => {
-        expect(res.body.message).to.not.be.undefined;
+        expect(res.body).to.be.deep.equal({
+          ready: true,
+          message: `Deployment is ready for upgrades`
+        });
       });
   });
 
@@ -61,19 +58,51 @@ describe('The API', () => {
       dockerCompose: JSON.parse('[]')
     };
     const upgradeMessageArray = upgradeMessagePayload.containers;
-
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
-    await runCommand(`sleep 200`, 'Waiting ...');
-
-    return chai.request('http://localhost:5008')
+    const res = await chai.request('http://localhost:5008')
       .post('/upgrade')
-      .send(upgradeMessagePayload)
-      .then(async res => {
-        expect(res).to.have.status(200);
-        await runCommand(`sleep 30`, 'Waiting a few seconds...');
-        const result = await upgradeService.getCurrentVersion('busybox');
-        console.log(`Is upgrade working? ${result}`);
-        expect(result).to.contain('1.35');
-      });
+      .send(upgradeMessagePayload);
+    expect(res).to.have.status(200);
+    console.log('Waiting for 30 seconds while pods update...');
+    await setTimeout(30000);
+    const result = await upgradeService.getCurrentVersion('busybox');
+    expect(result).to.contain('1.35');
+  });
+
+  it('Doesnt error if JSON format is missing non-required fields', async () => {
+    const upgradeMessagePayload = {
+      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.33' }]
+    };
+    console.log('Waiting for 30 seconds for pods to get ready...');
+    await setTimeout(30000);
+    const upgradeMessageArray = upgradeMessagePayload.containers;
+    const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
+    const res = await chai.request('http://localhost:5008')
+      .post('/upgrade')
+      .send(upgradeMessagePayload);
+    expect(res).to.have.status(200);
+    expect(res.body).to.be.deep.equal({message: 'Successfuly upgraded 1 containers'});
+    console.log('Waiting for 30 seconds while pods update...');
+    await setTimeout(30000);
+    const result = await upgradeService.getCurrentVersion('busybox');
+    expect(result).to.contain('1.33');
+  });
+
+  it('Reports error when upgrade fails', async () => {
+    const upgradeMessagePayload = {
+      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.uxyz' }]
+    };
+    const upgradeMessageArray = upgradeMessagePayload.containers;
+    const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
+    const resultBefore = await upgradeService.getCurrentVersion('busybox');
+    const res = await chai.request('http://localhost:5008')
+      .post('/upgrade')
+      .send(upgradeMessagePayload);
+    expect(res).to.have.status(500);
+    expect(res.body.message).to.contain('Error');
+    console.log('Waiting for 30 seconds while pods update...');
+    await setTimeout(30000);
+    const result = await upgradeService.getCurrentVersion('busybox');
+    expect(result).to.be.equal(resultBefore);
   });
 });

@@ -9,7 +9,7 @@ export default class Environment {
 
     try {
       const localConfigPath = path.resolve(__dirname,'../../config.json');
-      const config = JSON.parse(fs.readFileSync(localConfigPath).toString());
+      const config = JSON.parse(fs.readFileSync(localConfigPath, 'utf-8'));
       return config;
     } catch (err) {
       console.error(`Error when parsing local config file: ${err}`);
