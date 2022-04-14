@@ -4,6 +4,8 @@
 
 [![Tests](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/main.yml)
 
+[![Tests](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/e2e.yml/badge.svg?branch=master)](https://github.com/medic/upgrade-service-kubernetes/actions/workflows/e2e.yml)
+
 This tool provides an image that you can use to upgrade your pods in your kubernetes cluster. 
 
 ## Endpoint
@@ -14,12 +16,15 @@ To upgrade pods, send a `POST` request to `/upgrade` endpoint for sending upgrad
 This is the payload structure:
 
 ```
-[
-    {
-        "containerName": "medic-api",
-        "imageTag": "3.05"
+{
+  "containers": [
+    { 
+      "containerName": "medic-api",
+      "imageTag": "medic-api:3.05" 
     }
-]
+  ], 
+  "dockerCompose": []
+}
 ```
 
 Multiple upgrade requests can be sent in the same payload by adding more elements to the array using the same format above.
@@ -62,12 +67,15 @@ Let's deploy `nginx` with version tag 1.20 and we'll have the upgrade-service up
 2. Send the following curl command
 
 ```
-curl -X POST -H "Content-Type: application/json" -d '[
-  {
-    "containerName": "nginx",
-    "imageTag": "1.21"
-  }
-]' localhost:5008/upgrade
+curl -X POST -H "Content-Type: application/json" -d '{
+  "containers": [
+    { 
+      "containerName": "busybox", 
+      "imageTag": "busybox:1.35" 
+    }
+  ], 
+  "dockerCompose": []
+}'  localhost:5008/upgrade
 ```
 
 You should get the response from the server stating that upgrade succeeded.
@@ -75,3 +83,17 @@ You should get the response from the server stating that upgrade succeeded.
 `{"message":"Successfuly upgraded 1 containers"}`
 
 Confirm that the nginx pod is now using image `1.21`.
+
+## Environment Variables Overwrite Available
+
+These don't need to be set - the kubernetes setup picks them up automatically. However, if you need to overwrite any of the environment variables for whatever reason, you can use the `config.json` file. It contains the following variables:
+```
+    "KUBECONFIG_DEFAULT_PATH": "",
+    "CHT_DEPLOYMENT_NAME": "",
+    "CHT_NAMESPACE": ""
+```
+It's a good idea to not change these settings unless you know what you're doing. Here's a short description of what each one of them are for.
+
+`"KUBECONFIG_DEFAULT_PATH"`: This helps you specify where the kubeconfig file exists on disk. If this is specified, it will be taken as the default.
+`"CHT_DEPLOYMENT_NAME"`: The name of the deployment you would like to use for the setup.
+`"CHT_NAMESPACE"`: The name of the namespace you would like to use for the setup.
