@@ -90,19 +90,14 @@ describe('The API', () => {
 
   it('Reports error when upgrade fails', async () => {
     const upgradeMessagePayload = {
-      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.uxyz' }]
+      containers: [{ containerName: 'ibusybox', imageTag: 'busybox:1.35' }]
     };
-    const upgradeMessageArray = upgradeMessagePayload.containers;
-    const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
-    const resultBefore = await upgradeService.getCurrentVersion('busybox');
+    console.log('Waiting for 30 seconds for pods to get...');
+    await setTimeout(30000);
     const res = await chai.request('http://localhost:5008')
       .post('/upgrade')
       .send(upgradeMessagePayload);
     expect(res).to.have.status(500);
     expect(res.body.message).to.contain('Error');
-    console.log('Waiting for 30 seconds while pods update...');
-    await setTimeout(30000);
-    const result = await upgradeService.getCurrentVersion('busybox');
-    expect(result).to.be.equal(resultBefore);
   });
 });
