@@ -5,5 +5,4 @@ export interface IUpgradeMessage {
 
 export interface IUpgradeJSONPayload {
     containers: Array<IUpgradeMessage>;
-    dockerCompose: JSON;
 }

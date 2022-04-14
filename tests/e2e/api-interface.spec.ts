@@ -54,8 +54,7 @@ describe('The API', () => {
 
   it('Should upgrade deployment', async () => {
     const upgradeMessagePayload: IUpgradeJSONPayload = {
-      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.35' }],
-      dockerCompose: JSON.parse('[]')
+      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.35' }]
     };
     const upgradeMessageArray = upgradeMessagePayload.containers;
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
@@ -69,9 +68,11 @@ describe('The API', () => {
     expect(result).to.contain('1.35');
   });
 
-  it('Doesnt error if JSON format is missing non-required fields', async () => {
+  it('Doesnt error if JSON format has additional fields', async () => {
     const upgradeMessagePayload = {
-      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.33' }]
+      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.33' }],
+      dockerCompose: [],
+      someOtherFutureContent: []
     };
     console.log('Waiting for 30 seconds for pods to get ready...');
     await setTimeout(30000);
