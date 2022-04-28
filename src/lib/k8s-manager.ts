@@ -22,8 +22,8 @@ export default class K8sManager {
     this.setupLinkWithK8Server();
     const invalidUpgradeMessages = this.filterInvalidUpgradePairs();
     if(invalidUpgradeMessages.length) {
-      const errMessage = `Upgrade message invalid. containerName and imageTag need to be specified. 
-            Payload needs to be an array in the following format: [{containerName: <>, imageTag: <>}]
+      const errMessage = `Upgrade message invalid. container_name and image_tag need to be specified. 
+            Payload needs to be an object in the following format: { containers: [{container_name: <>, image_tag: <>}] }
             Not Valid: ${invalidUpgradeMessages.toString()}`;
 
       console.error(errMessage);
@@ -52,7 +52,7 @@ export default class K8sManager {
 
   private filterInvalidUpgradePairs(): Array<IUpgradeMessage> {
     return this.upgradeMessage.filter(
-      containerVersionPair => !containerVersionPair.containerName || !containerVersionPair.imageTag
+      containerVersionPair => !containerVersionPair.container_name || !containerVersionPair.image_tag
     );
   }
 
@@ -66,7 +66,7 @@ export default class K8sManager {
     return deployments?.body;
   }
 
-  async getContainerInNamespace(containerName: string): 
+  async getContainerInNamespace(containerName: string):
     Promise<{
         deployment: k8s.V1Deployment,
         container: k8s.V1Container
@@ -76,7 +76,7 @@ export default class K8sManager {
     if (container) {
       return {deployment, container};
     }
-        
+
     // Look for the container in the other deployments within the same namespace
     const deployments: k8s.V1DeploymentList = await this.getDeploymentsList();
     for (const deployment of deployments.items) {
@@ -94,8 +94,8 @@ export default class K8sManager {
 
   private async modifyContainerImageForDeployment(): Promise<k8s.V1Deployment[]> {
     for(const containerVersionPair of this.upgradeMessage) {
-      const containerName = containerVersionPair.containerName;
-      const imageTag = containerVersionPair.imageTag;
+      const containerName = containerVersionPair.container_name;
+      const imageTag = containerVersionPair.image_tag;
 
       const { deployment, container } = await this.getContainerInNamespace(containerName);
       container.image = imageTag;

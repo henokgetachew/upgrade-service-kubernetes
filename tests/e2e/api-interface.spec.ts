@@ -54,7 +54,7 @@ describe('The API', () => {
 
   it('Should upgrade deployment', async () => {
     const upgradeMessagePayload: IUpgradeJSONPayload = {
-      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.35' }]
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35' }]
     };
     const upgradeMessageArray = upgradeMessagePayload.containers;
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
@@ -70,7 +70,7 @@ describe('The API', () => {
 
   it('Doesnt error if JSON format has additional fields', async () => {
     const upgradeMessagePayload = {
-      containers: [{ containerName: 'busybox', imageTag: 'busybox:1.33' }],
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.33' }],
       dockerCompose: [],
       someOtherFutureContent: []
     };
@@ -91,7 +91,7 @@ describe('The API', () => {
 
   it('Reports error when upgrade fails', async () => {
     const upgradeMessagePayload = {
-      containers: [{ containerName: 'ibusybox', imageTag: 'busybox:1.35' }]
+      containers: [{ container_name: 'ibusybox', image_tag: 'busybox:1.35' }]
     };
     console.log('Waiting for 30 seconds for pods to get...');
     await setTimeout(30000);

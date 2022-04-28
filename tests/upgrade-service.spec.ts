@@ -21,7 +21,7 @@ describe('Upgrade Service', () => {
   });
 
   it('Constructs members correctly', ()=> {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'busybox', imageTag: 'busybox:1.35' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox', image_tag: 'busybox:1.35' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
     expect(upgradeService.k8sMgr).to.not.be.undefined;
@@ -29,12 +29,12 @@ describe('Upgrade Service', () => {
   });
 
   it('Should upgrade deployment', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'busybox', imageTag: 'busybox:1.35' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox', image_tag: 'busybox:1.35' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
     sinon.stub(upgradeService.k8sMgr, 'areAllDeploymentsInReadyState').resolves({
-      ready: true, podsNotReady: undefined 
+      ready: true, podsNotReady: undefined
     });
     const resultBefore = await upgradeService.getCurrentVersion('busybox');
     await upgradeService.upgradeDeployment();
@@ -49,7 +49,7 @@ describe('Upgrade Service', () => {
       `kubectl -n ${tempNamespace} run non-working-container --image=busybox:1.xx`,
       'Creating a non working image...');
     await runCommand(`sleep 5`, 'Lets wait for 5 seconds');
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'nonNginx', imageTag: 'nonNginx:1.20' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'nonNginx', image_tag: 'nonNginx:1.20' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
     const result = await upgradeService.isDeploymentReadyForUpgrades();
@@ -58,7 +58,7 @@ describe('Upgrade Service', () => {
   });
 
   it('Handles errors correctly', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'busybox', imageTag: 'busybox:1.35' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox', image_tag: 'busybox:1.35' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
@@ -71,7 +71,7 @@ describe('Upgrade Service', () => {
   });
 
   it('Correctly lets us know when no containers upgraded', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ containerName: 'busybox', imageTag: 'busybox:1.35' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox', image_tag: 'busybox:1.35' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
