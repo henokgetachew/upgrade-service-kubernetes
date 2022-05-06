@@ -1,6 +1,6 @@
 export interface IUpgradeMessage {
-    containerName: string;
-    imageTag: string;
+    container_name: string;
+    image_tag: string;
 }
 
 export interface IUpgradeJSONPayload {

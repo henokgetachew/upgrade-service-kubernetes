@@ -19,11 +19,11 @@ This is the payload structure:
 {
   "containers": [
     { 
-      "containerName": "medic-api",
-      "imageTag": "medic-api:3.05" 
+      "container_name": "medic-api",
+      "image_tag": "medic-api:3.05" 
     }
   ], 
-  "dockerCompose": []
+  ...
 }
 ```
 
@@ -70,11 +70,11 @@ Let's deploy `nginx` with version tag 1.20 and we'll have the upgrade-service up
 curl -X POST -H "Content-Type: application/json" -d '{
   "containers": [
     { 
-      "containerName": "busybox", 
-      "imageTag": "busybox:1.35" 
+      "container_name": "busybox", 
+      "image_tag": "busybox:1.35" 
     }
   ], 
-  "dockerCompose": []
+  ...
 }'  localhost:5008/upgrade
 ```
 
