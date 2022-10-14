@@ -70,7 +70,7 @@ export default class K8sManager {
     Promise<{
         deployment: k8s.V1Deployment,
         container: k8s.V1Container
-    }> {
+    } | undefined> {
     const deployment: k8s.V1Deployment = await this.pullDeploymentObject();
     const container = this.getContainerObject(deployment, containerName);
     if (container) {
@@ -85,7 +85,7 @@ export default class K8sManager {
         return {deployment, container};
       }
     }
-    throw new Error(`Container name: ${containerName} not found in deployment spec.`);
+    console.log(`Container name: ${containerName} not found in deployment spec.`);
   }
 
   private getContainerObject(deployment: k8s.V1Deployment, containerName: string) {
@@ -97,9 +97,11 @@ export default class K8sManager {
       const containerName = containerVersionPair.container_name;
       const imageTag = containerVersionPair.image_tag;
 
-      const { deployment, container } = await this.getContainerInNamespace(containerName);
-      container.image = imageTag;
-      this.upgradedDeployments.push(deployment);
+      const result = await this.getContainerInNamespace(containerName);
+      if (result?.deployment && result.container) {
+        result.container.image = imageTag;
+        this.upgradedDeployments.push(result.deployment);
+      }
     }
     return this.upgradedDeployments;
   }
@@ -155,6 +157,6 @@ export default class K8sManager {
 
   async getCurrentVersion(container: string): Promise<string> {
     const response = await this.getContainerInNamespace(container);
-    return response.container.image ?? 'Not found';
+    return response?.container.image ?? 'Not found';
   }
 }

@@ -65,7 +65,7 @@ describe('k8s-manager', () => {
     expect(deployment instanceof V1Deployment);
   });
 
-  it('Upgrade throws error when image not found', async () => {
+  it('Upgrade doesnt throw error when image not found', async () => {
     const upgradeMessageArray: IUpgradeMessage[] = [{container_name: 'wacko-image', image_tag: 'wacko-image:1.19'}];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
@@ -78,7 +78,7 @@ describe('k8s-manager', () => {
       errMessage = err;
     }
 
-    expect((errMessage as Error).message).to.contain('Container name: wacko-image not found');
+    expect(errMessage).to.be.undefined;
   });
 
   it('Shouldnt proceed with upgrade if all containers not ready', async () => {
@@ -157,11 +157,11 @@ describe('k8s-manager', () => {
 
     const response = await k8sMgr.getContainerInNamespace('upgrade-service');
 
-    expect(response.container instanceof V1Container);
-    expect(response.deployment instanceof V1Deployment);
+    expect(response?.container instanceof V1Container);
+    expect(response?.deployment instanceof V1Deployment);
   });
 
-  it('Throws error when pulling missing container in namespace', async () => {
+  it('Doesnt error when pulling missing container in namespace', async () => {
     const upgradeMessageArray: IUpgradeMessage[] = [
       {container_name: 'missing-container', image_tag: 'some-tag-doesnt-matter-here'}
     ];
@@ -174,7 +174,7 @@ describe('k8s-manager', () => {
       errMessage = err;
     }
 
-    expect((errMessage as Error).message).to.contain(`Container name: missing-container not found in deployment spec.`);
+    expect(errMessage).to.be.undefined;
   });
 
 });
