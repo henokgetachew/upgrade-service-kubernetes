@@ -68,9 +68,10 @@ describe('The API', () => {
     expect(result).to.contain('1.35');
   });
 
-  it('Doesnt error if JSON format has additional fields', async () => {
+  it('Doesnt error if JSON format and container field has additional fields', async () => {
     const upgradeMessagePayload = {
-      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.33' }],
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.33' },
+        {container_name: 'yyy', image_tag: 'yyy:1.33'}],
       dockerCompose: [],
       someOtherFutureContent: []
     };
@@ -91,7 +92,7 @@ describe('The API', () => {
 
   it('Reports error when upgrade fails', async () => {
     const upgradeMessagePayload = {
-      containers: [{ container_name: 'ibusybox', image_tag: 'busybox:1.35' }]
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35yyxx' }]
     };
     console.log('Waiting for 30 seconds for pods to get...');
     await setTimeout(30000);
