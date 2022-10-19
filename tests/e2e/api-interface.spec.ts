@@ -90,15 +90,21 @@ describe('The API', () => {
     expect(result).to.contain('1.33');
   });
 
-  it('Reports error when upgrade fails', async () => {
+  it('Reports error when deployment not ready for upgrades', async () => {
     const upgradeMessagePayload = {
-      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35yyxx' }]
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35' }]
     };
-    console.log('Waiting for 30 seconds for pods to get...');
-    await setTimeout(30000);
-    const res = await chai.request('http://localhost:5008')
+    const upgradeMessagePayloadNext = {
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35' }]
+    };
+
+    await chai.request('http://localhost:5008')
       .post('/upgrade')
       .send(upgradeMessagePayload);
+
+    const res = await chai.request('http://localhost:5008')
+      .post('/upgrade')
+      .send(upgradeMessagePayloadNext);
     expect(res).to.have.status(500);
     expect(res.body.message).to.contain('Error');
   });
