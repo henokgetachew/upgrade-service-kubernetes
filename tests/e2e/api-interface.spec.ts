@@ -92,7 +92,7 @@ describe('The API', () => {
 
   it('Reports error when deployment not ready for upgrades', async () => {
     const upgradeMessagePayload = {
-      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35' }]
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35yyy' }]
     };
     const upgradeMessagePayloadNext = {
       containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35' }]
