@@ -27,20 +27,14 @@ app.post('/upgrade', async (req: any, res: any) => {
     const upgradeService = new UpgradeService(upgradePayload.containers);
     const upgradeResponse = await upgradeService.upgradeDeployment();
     if(upgradeResponse.upgradeResult === UpgradeResult.Success) {
-      return res.status(200).json({
-        message: `Successfuly upgraded ${upgradeResponse.upgradeCount} containers`
-      });
+      return res.status(200).json(upgradeResponse.upgradedContainers);
     }
 
     console.error('Error during upgrade.', upgradeResponse.message);
-    res.status(500).json({
-      message: upgradeResponse.message
-    });
+    res.status(500).json({ message: upgradeResponse.message });
   } catch (err: any) {
     console.error('Error during upgrade', err);
-    res.status(500).json({
-      message: `Error: ${err}`
-    });
+    res.status(500).json({ message: `Error: ${err}` });
   }
 });
 
