@@ -45,7 +45,7 @@ describe('Upgrade Service', () => {
 
     expect(result).to.deep.equal({
       upgradeResult: 1,
-      upgradedContainers: { ok: true },
+      upgradedContainers: { busybox: { ok: true } },
     });
   });
 

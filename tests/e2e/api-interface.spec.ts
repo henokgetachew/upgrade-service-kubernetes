@@ -70,9 +70,11 @@ describe('The API', () => {
 
   it('Doesnt error if JSON format and container field has additional fields', async () => {
     const upgradeMessagePayload = {
-      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.33' },
-        {container_name: 'yyy', image_tag: 'yyy:1.33'}],
-      dockerCompose: [],
+      containers: [
+        { container_name: 'busybox', image_tag: 'busybox:1.33' },
+        { container_name: 'yyy', image_tag: 'yyy:1.33'}
+      ],
+      docker_compose: [],
       someOtherFutureContent: []
     };
     console.log('Waiting for 30 seconds for pods to get ready...');
@@ -83,7 +85,10 @@ describe('The API', () => {
       .post('/upgrade')
       .send(upgradeMessagePayload);
     expect(res).to.have.status(200);
-    expect(res.body).to.be.deep.equal({message: 'Successfuly upgraded 1 containers'});
+    expect(res.body).to.be.deep.equal({
+      busybox: { ok: true },
+      yyy: { ok: true },
+    });
     console.log('Waiting for 30 seconds while pods update...');
     await setTimeout(30000);
     const result = await upgradeService.getCurrentVersion('busybox');
