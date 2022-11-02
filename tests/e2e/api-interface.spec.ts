@@ -87,7 +87,7 @@ describe('The API', () => {
     expect(res).to.have.status(200);
     expect(res.body).to.be.deep.equal({
       busybox: { ok: true },
-      yyy: { ok: true },
+      yyy: { ok: false },
     });
     console.log('Waiting for 30 seconds while pods update...');
     await setTimeout(30000);
