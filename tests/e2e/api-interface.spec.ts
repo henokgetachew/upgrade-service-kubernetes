@@ -103,6 +103,8 @@ describe('The API', () => {
       .post('/upgrade')
       .send(upgradeMessagePayload);
 
+    console.log(res);
+
     expect(res).to.have.status(200);
     expect(res.body).to.be.deep.equal({
       busybox: { ok: true },
