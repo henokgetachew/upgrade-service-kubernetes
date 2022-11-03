@@ -28,11 +28,14 @@ describe('The API', () => {
       'Creating a busybox deployment');
 
     // wait for the upgrade service to be online
+    let ready;
     do {
       try {
-        return await chai.request(SERVICE_URL).get('/');
-      } catch (err) {};
-    } while (true);
+        ready = await chai.request(SERVICE_URL).get('/');
+      } catch (err) {
+        // ignore socket timeout errors
+      }
+    } while (!ready);
   });
 
   after(() => {
@@ -46,26 +49,6 @@ describe('The API', () => {
     expect(res.body.message).to.be.equal('Upgrade service working.');
   });
 
-  it('Server status endpoint returns deployment readiness when not ready', async () => {
-    const res = await getStatus();
-    expect(res.body.ready).to.equal(false);
-    expect(res.body.message).to.match(/Deployment is not ready for upgrades/);
-  });
-
-  it('Reports error when deployment not ready for upgrades', async () => {
-    const statusRes = await getStatus();
-    expect(statusRes.body.ready).to.equal(false);
-    const upgradeMessagePayload = {
-      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35' }]
-    };
-
-    const res = await chai.request(SERVICE_URL)
-      .post('/upgrade')
-      .send(upgradeMessagePayload);
-    expect(res).to.have.status(500);
-    expect(res.body.message).to.contain('Error');
-  });
-
   it('Server status endpoint returns deployment readiness when ready', async () => {
     await waitForDeploymentReady();
 
@@ -77,7 +60,7 @@ describe('The API', () => {
   });
 
   it('Listens on 5008', async () => {
-    const res = await chai.request(SERVICE_URL).get('/')
+    const res = await chai.request(SERVICE_URL).get('/');
     expect(res).to.have.status(200);
     expect(res.body.message).to.be.equal('Upgrade service working.');
   });
@@ -131,4 +114,20 @@ describe('The API', () => {
       currentTag = await upgradeService.getCurrentVersion(upgradeMessagePayload.containers[0].container_name);
     } while (currentTag !== upgradeMessagePayload.containers[0].image_tag);
   });
+
+  it('Reports error when deployment not ready for upgrades', async () => {
+    const upgradeMessagePayload: IUpgradeJSONPayload = {
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.36' }]
+    };
+    await chai.request(SERVICE_URL)
+      .post('/upgrade')
+      .send(upgradeMessagePayload);
+
+    const res = await chai.request(SERVICE_URL)
+      .post('/upgrade')
+      .send(upgradeMessagePayload);
+    expect(res).to.have.status(500);
+    expect(res.body.message).to.contain('Error');
+  });
+
 });
