@@ -1,9 +1,8 @@
 import Environment from './env-manager';
-import { IUpgradeMessage } from './upgrade-message';
+import { IUpgradedContainers, IUpgradeMessage } from './upgrade-message';
 import K8sManager from './k8s-manager';
-import { UpgradeResult } from './upgrade-result';
+import { IUpgradeContainersResult, UpgradeResult } from './upgrade-result';
 import { IDeploymentReadiness } from './deployment-readiness';
-import { V1Deployment } from '@kubernetes/client-node';
 
 export default class UpgradeService {
 
@@ -21,33 +20,32 @@ export default class UpgradeService {
     return this.k8sMgr.getCurrentVersion(container);
   }
 
-  upgradeSuccess(count: number) {
+  upgradeSuccess(upgradedContainers: IUpgradedContainers) {
+    const upgradeContainersResult:IUpgradeContainersResult = {};
+    Object.keys(upgradedContainers).forEach((containerName:string) => {
+      upgradeContainersResult[containerName] = { ok: upgradedContainers[containerName].ok };
+    });
     return {
       upgradeResult: UpgradeResult.Success,
-      upgradeCount: count,
-      message: 'Successfuly upgraded'
+      upgradedContainers: upgradeContainersResult,
     };
   }
 
   upgradeFailure(message?: string) {
     return {
       upgradeResult: UpgradeResult.Failure,
-      upgradeCount: 0,
       message: message || 'Upgrade failed.'
     };
   }
 
   async upgradeDeployment(): Promise<{
     upgradeResult: UpgradeResult,
-    upgradeCount: number,
-    message: string
+    upgradedContainers?: IUpgradeContainersResult,
+    message?: string
   }> {
     try {
-      const deployments: V1Deployment[] = await this.k8sMgr.upgradeDeploymentContainers();
-      if (deployments.length > 0) {
-        return this.upgradeSuccess(deployments.length);
-      }
-      return this.upgradeFailure();
+      const upgradedContainers: IUpgradedContainers = await this.k8sMgr.upgradeDeploymentContainers();
+      return this.upgradeSuccess(upgradedContainers);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Error while upgrading deployment containers', err);

@@ -37,11 +37,16 @@ describe('Upgrade Service', () => {
       ready: true, podsNotReady: undefined
     });
     const resultBefore = await upgradeService.getCurrentVersion('busybox');
-    await upgradeService.upgradeDeployment();
+    const result = await upgradeService.upgradeDeployment();
     const resultAfter = await upgradeService.getCurrentVersion('busybox');
 
     expect(resultBefore).to.contain('1.34');
     expect(resultAfter).to.contain('1.35');
+
+    expect(result).to.deep.equal({
+      upgradeResult: 1,
+      upgradedContainers: { busybox: { ok: true } },
+    });
   });
 
   it('Should not proceed if all pods are not in a ready state', async () => {
@@ -65,21 +70,49 @@ describe('Upgrade Service', () => {
     sinon.stub(upgradeService.k8sMgr, 'upgradeDeploymentContainers').throwsException('Error yada yada');
     const response = await upgradeService.upgradeDeployment();
 
-    expect(response.upgradeCount).to.be.equal(0);
     expect(response.upgradeResult).to.be.equal(UpgradeResult.Failure);
     expect(response.message).to.be.equal('Error yada yada');
   });
 
-  it('Correctly lets us know when no containers upgraded', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox', image_tag: 'busybox:1.35' }];
+  it('lets us know when no containers upgraded', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'not_busybox', image_tag: 'not_busybox:1.36' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
-    sinon.stub(upgradeService.k8sMgr, 'upgradeDeploymentContainers').resolves([]);
-    const response = await upgradeService.upgradeDeployment();
+    sinon.stub(upgradeService.k8sMgr, 'areAllDeploymentsInReadyState').resolves({
+      ready: true, podsNotReady: undefined
+    });
+    const tagBefore = await upgradeService.getCurrentVersion('busybox');
+    const result = await upgradeService.upgradeDeployment();
+    const tagAfter = await upgradeService.getCurrentVersion('busybox');
 
-    expect(response.message).to.be.equal('Upgrade failed.');
-    expect(response.upgradeCount).to.be.equal(0);
-    expect(response.upgradeResult).to.be.equal(UpgradeResult.Failure);
+    expect(tagBefore).to.contain('1.35');
+    expect(tagAfter).to.contain('1.35');
+
+    expect(result.upgradedContainers).to.deep.equal({ not_busybox: { ok: false } });
+  });
+
+  it('lets us know when some containers upgraded', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [
+      { container_name: 'not_busybox', image_tag: 'not_busybox:1.36' },
+      { container_name: 'busybox', image_tag: 'busybox:1.36' }
+    ];
+
+    const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
+
+    sinon.stub(upgradeService.k8sMgr, 'areAllDeploymentsInReadyState').resolves({
+      ready: true, podsNotReady: undefined
+    });
+    const tagBefore = await upgradeService.getCurrentVersion('busybox');
+    const result = await upgradeService.upgradeDeployment();
+    const tagAfter = await upgradeService.getCurrentVersion('busybox');
+
+    expect(tagBefore).to.contain('1.35');
+    expect(tagAfter).to.contain('1.36');
+
+    expect(result.upgradedContainers).to.deep.equal({
+      not_busybox: { ok: false },
+      busybox: { ok: true }
+    });
   });
 });

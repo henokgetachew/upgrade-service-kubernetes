@@ -4,9 +4,19 @@ import { runCommand } from '../utils/command-exec';
 import { tempNamespace, k8s_deployment_name } from '../../tests/resources/test-constants';
 import { IUpgradeJSONPayload } from '../../src/lib/upgrade-message';
 import UpgradeService from '../../src/lib/upgrade-service';
-import { setTimeout } from 'timers/promises';
+
+const SERVICE_URL = 'http://localhost:5008';
 
 chai.use(chaiHttp);
+
+const getStatus = () => chai.request(SERVICE_URL).get('/server-status');
+const waitForDeploymentReady = async () => {
+  let ready = false;
+  do {
+    const statusRes = await getStatus();
+    ready = statusRes.body.ready;
+  } while (!ready);
+};
 
 describe('The API', () => {
 
@@ -16,8 +26,16 @@ describe('The API', () => {
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox.yaml`,
       'Creating a busybox deployment');
-    console.log('Waiting for ~ 3 minutes - until pods finish creation.');
-    await setTimeout(220000);
+
+    // wait for the upgrade service to be online
+    let ready;
+    do {
+      try {
+        ready = await chai.request(SERVICE_URL).get('/');
+      } catch (err) {
+        // ignore socket timeout errors
+      }
+    } while (!ready);
   });
 
   after(() => {
@@ -26,86 +44,92 @@ describe('The API', () => {
   });
 
   it('Listens on 5008', async () => {
-    return chai.request('http://localhost:5008').get('/')
-      .then(res => {
-        expect(res).to.have.status(200);
-        expect(res.body.message).to.be.equal('Upgrade service working.');
-      });
+    const res = await chai.request(SERVICE_URL).get('/');
+    expect(res).to.have.status(200);
+    expect(res.body.message).to.be.equal('Upgrade service working.');
   });
 
-  it('Server status endpoint exists', () => {
-    return chai.request('http://localhost:5008')
-      .get('/server-status')
-      .then(res => {
-        expect(res).to.have.status(200);
-      });
+  it('Server status endpoint returns deployment readiness when ready', async () => {
+    await waitForDeploymentReady();
+
+    const res = await getStatus();
+    expect(res.body).to.be.deep.equal({
+      ready: true,
+      message: `Deployment is ready for upgrades`
+    });
   });
 
-  it('Server status endpoint returns deployment readiness', () => {
-    return chai.request('http://localhost:5008')
-      .get('/server-status')
-      .then(res => {
-        expect(res.body).to.be.deep.equal({
-          ready: true,
-          message: `Deployment is ready for upgrades`
-        });
-      });
+  it('Listens on 5008', async () => {
+    const res = await chai.request(SERVICE_URL).get('/');
+    expect(res).to.have.status(200);
+    expect(res.body.message).to.be.equal('Upgrade service working.');
   });
 
   it('Should upgrade deployment', async () => {
+    await waitForDeploymentReady();
+
     const upgradeMessagePayload: IUpgradeJSONPayload = {
       containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35' }]
     };
     const upgradeMessageArray = upgradeMessagePayload.containers;
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
-    const res = await chai.request('http://localhost:5008')
+    const res = await chai
+      .request(SERVICE_URL)
       .post('/upgrade')
       .send(upgradeMessagePayload);
     expect(res).to.have.status(200);
-    console.log('Waiting for 30 seconds while pods update...');
-    await setTimeout(30000);
-    const result = await upgradeService.getCurrentVersion('busybox');
-    expect(result).to.contain('1.35');
+
+    let currentTag;
+    do {
+      currentTag = await upgradeService.getCurrentVersion(upgradeMessagePayload.containers[0].container_name);
+    } while (currentTag !== upgradeMessagePayload.containers[0].image_tag);
   });
 
   it('Doesnt error if JSON format and container field has additional fields', async () => {
+    await waitForDeploymentReady();
+
     const upgradeMessagePayload = {
-      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.33' },
-        {container_name: 'yyy', image_tag: 'yyy:1.33'}],
-      dockerCompose: [],
+      containers: [
+        { container_name: 'busybox', image_tag: 'busybox:1.33' },
+        { container_name: 'yyy', image_tag: 'yyy:1.33'}
+      ],
+      docker_compose: [],
       someOtherFutureContent: []
     };
-    console.log('Waiting for 30 seconds for pods to get ready...');
-    await setTimeout(30000);
+
     const upgradeMessageArray = upgradeMessagePayload.containers;
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
-    const res = await chai.request('http://localhost:5008')
+    const res = await chai.request(SERVICE_URL)
       .post('/upgrade')
       .send(upgradeMessagePayload);
+
+    console.log(res);
+
     expect(res).to.have.status(200);
-    expect(res.body).to.be.deep.equal({message: 'Successfuly upgraded 1 containers'});
-    console.log('Waiting for 30 seconds while pods update...');
-    await setTimeout(30000);
-    const result = await upgradeService.getCurrentVersion('busybox');
-    expect(result).to.contain('1.33');
+    expect(res.body).to.be.deep.equal({
+      busybox: { ok: true },
+      yyy: { ok: false },
+    });
+
+    let currentTag;
+    do {
+      currentTag = await upgradeService.getCurrentVersion(upgradeMessagePayload.containers[0].container_name);
+    } while (currentTag !== upgradeMessagePayload.containers[0].image_tag);
   });
 
   it('Reports error when deployment not ready for upgrades', async () => {
-    const upgradeMessagePayload = {
-      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35yyy' }]
+    const upgradeMessagePayload: IUpgradeJSONPayload = {
+      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.36' }]
     };
-    const upgradeMessagePayloadNext = {
-      containers: [{ container_name: 'busybox', image_tag: 'busybox:1.35' }]
-    };
-
-    await chai.request('http://localhost:5008')
+    await chai.request(SERVICE_URL)
       .post('/upgrade')
       .send(upgradeMessagePayload);
 
-    const res = await chai.request('http://localhost:5008')
+    const res = await chai.request(SERVICE_URL)
       .post('/upgrade')
-      .send(upgradeMessagePayloadNext);
+      .send(upgradeMessagePayload);
     expect(res).to.have.status(500);
     expect(res.body.message).to.contain('Error');
   });
+
 });

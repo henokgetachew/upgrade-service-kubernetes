@@ -1,7 +1,7 @@
 import * as k8s from '@kubernetes/client-node';
 import { IDeploymentReadiness, IPodNotReady } from './deployment-readiness';
 import Environment from './env-manager';
-import { IUpgradeMessage } from './upgrade-message';
+import { IUpgradedContainers, IUpgradeMessage } from './upgrade-message';
 
 export default class K8sManager {
   kc: k8s.KubeConfig;
@@ -11,7 +11,7 @@ export default class K8sManager {
   namespace: string;
   k8sDeploymentName: string;
   upgradeMessage: IUpgradeMessage[];
-  upgradedDeployments: k8s.V1Deployment[] = [];
+  upgradedContainers: IUpgradedContainers = {};
 
   constructor(namespace: string, k8sDeploymentName: string, upgradeMessage: IUpgradeMessage[] ) {
     this.kc = new k8s.KubeConfig();
@@ -92,22 +92,21 @@ export default class K8sManager {
     return deployment?.spec?.template?.spec?.containers.find(container => container.name === containerName);
   }
 
-  private async modifyContainerImageForDeployment(): Promise<k8s.V1Deployment[]> {
-    for(const containerVersionPair of this.upgradeMessage) {
+  private async modifyContainerImageForDeployment() {
+    for (const containerVersionPair of this.upgradeMessage) {
       const containerName = containerVersionPair.container_name;
       const imageTag = containerVersionPair.image_tag;
 
+      this.upgradedContainers[containerName] = { ok: false };
       const result = await this.getContainerInNamespace(containerName);
       if (result?.deployment && result.container) {
         result.container.image = imageTag;
-        this.upgradedDeployments.push(result.deployment);
+        this.upgradedContainers[containerName].deployment = result.deployment;
       }
     }
-    return this.upgradedDeployments;
   }
 
-  async upgradeDeploymentContainers(): Promise<k8s.V1Deployment[]> {
-    const succesfullyUpgraded: k8s.V1Deployment[] = [];
+  async upgradeDeploymentContainers(): Promise<IUpgradedContainers> {
     const areDeploymentsReady = await this.areAllDeploymentsInReadyState();
     if(!areDeploymentsReady.ready) {
       throw new Error(`Can't upgrade right now.
@@ -115,15 +114,18 @@ export default class K8sManager {
     }
 
     await this.modifyContainerImageForDeployment();
-    for (const deployment of this.upgradedDeployments) {
-      const deploymentName = deployment.metadata?.name;
-      if (deploymentName) {
-        const upgradeResponse = await this.k8sAppsV1Api
-          .replaceNamespacedDeployment(deploymentName, this.namespace, deployment);
-        succesfullyUpgraded.push(upgradeResponse.body);
+    for (const upgradedContainer of Object.values(this.upgradedContainers)) {
+      const deploymentName = upgradedContainer.deployment?.metadata?.name;
+      if (upgradedContainer.deployment && deploymentName) {
+        await this.k8sAppsV1Api.replaceNamespacedDeployment(
+          deploymentName,
+          this.namespace,
+          upgradedContainer.deployment
+        );
+        upgradedContainer.ok = true;
       }
     }
-    return succesfullyUpgraded;
+    return this.upgradedContainers;
   }
 
   async areAllDeploymentsInReadyState(): Promise<IDeploymentReadiness> {
