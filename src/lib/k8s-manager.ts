@@ -89,7 +89,9 @@ export default class K8sManager {
   }
 
   private getContainerObject(deployment: k8s.V1Deployment, containerName: string) {
-    return deployment?.spec?.template?.spec?.containers.find(container => container.name === containerName);
+    // Match containers of kind containerName or containerName-<number>
+    const regex = new RegExp('^' + containerName + '(-[0-9]+)?$');
+    return deployment?.spec?.template?.spec?.containers.find(container => regex.test(container.name));
   }
 
   private async modifyContainerImageForDeployment() {

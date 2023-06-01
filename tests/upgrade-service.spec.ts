@@ -13,6 +13,9 @@ describe('Upgrade Service', () => {
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox.yaml`,
       'Creating a busybox deployment');
+    await runCommand(
+      `kubectl -n ${tempNamespace} apply -f tests/resources/busybox-1.yaml`,
+      'Creating a busybox-1 deployment');
     await runCommand(`sleep 2`, 'Waiting a few seconds...');
   });
 
@@ -47,6 +50,22 @@ describe('Upgrade Service', () => {
       upgradeResult: 1,
       upgradedContainers: { busybox: { ok: true } },
     });
+  });
+
+  it('Should upgrade deployment if container is named with a suffix', async () => {
+    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox', image_tag: 'busybox:1.35' }];
+
+    const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
+
+    sinon.stub(upgradeService.k8sMgr, 'areAllDeploymentsInReadyState').resolves({
+      ready: true, podsNotReady: undefined
+    });
+    const resultBefore = await upgradeService.getCurrentVersion('busybox-1');
+    await upgradeService.upgradeDeployment();
+    const resultAfter = await upgradeService.getCurrentVersion('busybox-1');
+
+    expect(resultBefore).to.contain('1.34');
+    expect(resultAfter).to.contain('1.35');
   });
 
   it('Should not proceed if all pods are not in a ready state', async () => {
