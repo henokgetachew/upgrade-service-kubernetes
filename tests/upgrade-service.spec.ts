@@ -16,7 +16,7 @@ describe('Upgrade Service', () => {
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox-1.yaml`,
       'Creating a busybox-1 deployment');
-    await runCommand(`sleep 2`, 'Waiting a few seconds...');
+    await runCommand(`sleep 5`, 'Waiting a few seconds...');
   });
 
   afterEach(() => {
