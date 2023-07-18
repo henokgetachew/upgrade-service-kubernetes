@@ -55,9 +55,12 @@ app.get('/server-status',async (req: any, res: any) => {
   });
 });
 
-const port = Environment.getUpgradeServicePort();
-console.log(`Listening on port ${port}`);
+const port = Number(Environment.getUpgradeServicePort());
+const host = '0.0.0.0';
+console.log(`Listening on host ${host} and port ${port}`);
 
 export default app;
 
-app.listen(port);
+app.listen(port, host, () => {
+  console.log(`Server is running on ${host}:${port}`);
+});
