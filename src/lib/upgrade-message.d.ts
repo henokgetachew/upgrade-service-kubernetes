@@ -1,4 +1,4 @@
-import { V1Deployment } from '@kubernetes/client-node';
+import { V1Deployment} from '@kubernetes/client-node';
 
 export interface IUpgradeMessage {
  container_name: string;

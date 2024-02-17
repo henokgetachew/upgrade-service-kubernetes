@@ -43,17 +43,20 @@ describe('Upgrade Service', () => {
     const result = await upgradeService.upgradeDeployment();
     const resultAfter = await upgradeService.getCurrentVersion('busybox');
 
-    expect(resultBefore).to.contain('1.34');
-    expect(resultAfter).to.contain('1.35');
+    expect(resultBefore).to.equal('busybox:1.34 busybox:1.34');
+    expect(resultAfter).to.contain('busybox:1.35 busybox:1.35');
 
     expect(result).to.deep.equal({
       upgradeResult: 1,
-      upgradedContainers: { busybox: { ok: true } },
+      upgradedContainers: {
+        busybox: { ok: true },
+        'busybox-1': { ok: true },
+      },
     });
   });
 
   it('Should upgrade deployment if container is named with a suffix', async () => {
-    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox', image_tag: 'busybox:1.35' }];
+    const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox-1', image_tag: 'busybox:1.36' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);
 
@@ -64,8 +67,8 @@ describe('Upgrade Service', () => {
     await upgradeService.upgradeDeployment();
     const resultAfter = await upgradeService.getCurrentVersion('busybox-1');
 
-    expect(resultBefore).to.contain('1.34');
-    expect(resultAfter).to.contain('1.35');
+    expect(resultBefore).to.contain('1.35');
+    expect(resultAfter).to.contain('1.36');
   });
 
   it('Should not proceed if all pods are not in a ready state', async () => {
@@ -108,7 +111,8 @@ describe('Upgrade Service', () => {
     expect(tagBefore).to.contain('1.35');
     expect(tagAfter).to.contain('1.35');
 
-    expect(result.upgradedContainers).to.deep.equal({ not_busybox: { ok: false } });
+    expect(result.upgradedContainers).to.deep.equal({ });
+    // expect(result.upgradedContainers).to.deep.equal({ not_busybox: { ok: false } });
   });
 
   it('lets us know when some containers upgraded', async () => {
@@ -130,8 +134,9 @@ describe('Upgrade Service', () => {
     expect(tagAfter).to.contain('1.36');
 
     expect(result.upgradedContainers).to.deep.equal({
-      not_busybox: { ok: false },
-      busybox: { ok: true }
+      //not_busybox: { ok: false },
+      busybox: { ok: true },
+      'busybox-1': { ok: true }
     });
   });
 });

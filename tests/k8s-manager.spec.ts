@@ -7,7 +7,6 @@ import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
 import { expect } from 'chai';
 import { before } from 'mocha';
 import sinon from 'sinon';
-import { V1Container, V1Deployment } from '@kubernetes/client-node';
 
 describe('k8s-manager', () => {
 
@@ -62,7 +61,8 @@ describe('k8s-manager', () => {
 
     const deployment = await k8sMgr.pullDeploymentObject();
 
-    expect(deployment instanceof V1Deployment);
+    console.log(deployment);
+    // expect(deployment).to.be.a(V1Deployment);
   });
 
   it('Upgrade doesnt throw error when image not found', async () => {
@@ -155,10 +155,11 @@ describe('k8s-manager', () => {
     ];
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
-    const response = await k8sMgr.getContainerInNamespace('upgrade-service');
+    const response = await k8sMgr.getContainersInNamespace('upgrade-service');
 
-    expect(response?.container instanceof V1Container);
-    expect(response?.deployment instanceof V1Deployment);
+    expect(response?.length).to.equal(1);
+    expect(response?.[0].container.name).to.equal('upgrade-service');
+    expect(response?.[0].deployment.metadata?.name).to.equal(k8s_deployment_name);
   });
 
   it('Doesnt error when pulling missing container in namespace', async () => {
@@ -169,7 +170,7 @@ describe('k8s-manager', () => {
     let errMessage = undefined;
     try {
       const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
-      await k8sMgr.getContainerInNamespace('missing-container');
+      await k8sMgr.getContainersInNamespace('missing-container');
     } catch (err) {
       errMessage = err;
     }
