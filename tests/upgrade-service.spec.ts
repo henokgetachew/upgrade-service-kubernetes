@@ -112,7 +112,6 @@ describe('Upgrade Service', () => {
     expect(tagAfter).to.contain('1.35');
 
     expect(result.upgradedContainers).to.deep.equal({ });
-    // expect(result.upgradedContainers).to.deep.equal({ not_busybox: { ok: false } });
   });
 
   it('lets us know when some containers upgraded', async () => {
@@ -134,7 +133,6 @@ describe('Upgrade Service', () => {
     expect(tagAfter).to.contain('1.36');
 
     expect(result.upgradedContainers).to.deep.equal({
-      //not_busybox: { ok: false },
       busybox: { ok: true },
       'busybox-1': { ok: true }
     });
