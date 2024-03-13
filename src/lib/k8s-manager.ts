@@ -66,32 +66,30 @@ export default class K8sManager {
     return deployments?.body;
   }
 
-  async getContainerInNamespace(containerName: string):
-    Promise<{
+  async getContainersInNamespace(containerName: string):
+    Promise<Array<{
         deployment: k8s.V1Deployment,
         container: k8s.V1Container
-    } | undefined> {
-    const deployment: k8s.V1Deployment = await this.pullDeploymentObject();
-    const container = this.getContainerObject(deployment, containerName);
-    if (container) {
-      return {deployment, container};
-    }
+    }> | undefined> {
+
+    const containers:{ deployment: k8s.V1Deployment, container: k8s.V1Container }[] = [];
 
     // Look for the container in the other deployments within the same namespace
     const deployments: k8s.V1DeploymentList = await this.getDeploymentsList();
     for (const deployment of deployments.items) {
-      const container = this.getContainerObject(deployment, containerName);
-      if (container) {
-        return {deployment, container};
-      }
+      const deploymentContainers = this
+        .getContainerObjects(deployment, containerName)
+        .map(container => ({ deployment, container }));
+      containers.push(...deploymentContainers) ;
     }
-    console.log(`Container name: ${containerName} not found in deployment spec.`);
+
+    return containers;
   }
 
-  private getContainerObject(deployment: k8s.V1Deployment, containerName: string) {
+  private getContainerObjects(deployment: k8s.V1Deployment, containerName: string):k8s.V1Container[] {
     // Match containers of kind containerName or containerName-<number>
     const regex = new RegExp('^' + containerName + '(-[0-9]+)?$');
-    return deployment?.spec?.template?.spec?.containers.find(container => regex.test(container.name));
+    return deployment?.spec?.template?.spec?.containers.filter(container => regex.test(container.name)) || [];
   }
 
   private async modifyContainerImageForDeployment() {
@@ -99,12 +97,11 @@ export default class K8sManager {
       const containerName = containerVersionPair.container_name;
       const imageTag = containerVersionPair.image_tag;
 
-      this.upgradedContainers[containerName] = { ok: false };
-      const result = await this.getContainerInNamespace(containerName);
-      if (result?.deployment && result.container) {
+      const containers = await this.getContainersInNamespace(containerName);
+      containers?.forEach(result => {
         result.container.image = imageTag;
-        this.upgradedContainers[containerName].deployment = result.deployment;
-      }
+        this.upgradedContainers[result.container.name] = { ok: true, deployment: result.deployment };
+      });
     }
   }
 
@@ -151,16 +148,18 @@ export default class K8sManager {
     }));
 
     if(podsNotReady.length) {
-      deploymentReadiness = {ready: false, podsNotReady: podsNotReady};
+      deploymentReadiness = { ready: false, podsNotReady: podsNotReady };
       return deploymentReadiness;
     }
 
-    deploymentReadiness = { ready: true};
+    deploymentReadiness = { ready: true };
     return deploymentReadiness;
   }
 
   async getCurrentVersion(container: string): Promise<string> {
-    const response = await this.getContainerInNamespace(container);
-    return response?.container.image ?? 'Not found';
+    const NOT_FOUND = 'Not found';
+    const response = await this.getContainersInNamespace(container);
+    const images = response?.map(response => response?.container.image ?? NOT_FOUND);
+    return images?.join(' ') || NOT_FOUND;
   }
 }
