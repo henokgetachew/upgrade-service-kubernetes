@@ -56,6 +56,7 @@ describe('Upgrade Service', () => {
   });
 
   it('Should upgrade deployment if container is named with a suffix', async () => {
+    await runCommand(`sleep 5`, 'Avoid 409 conflict race condition with previous test');
     const upgradeMessageArray: IUpgradeMessage[] = [{ container_name: 'busybox-1', image_tag: 'busybox:1.36' }];
 
     const upgradeService = new UpgradeService(upgradeMessageArray, tempNamespace, k8s_deployment_name);

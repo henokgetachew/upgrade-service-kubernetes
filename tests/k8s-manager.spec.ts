@@ -7,6 +7,7 @@ import { k8s_deployment_name, tempNamespace } from './resources/test-constants';
 import { expect } from 'chai';
 import { before } from 'mocha';
 import sinon from 'sinon';
+import { V1Deployment } from '@kubernetes/client-node';
 
 describe('k8s-manager', () => {
 
@@ -60,9 +61,7 @@ describe('k8s-manager', () => {
     const k8sMgr = new K8sManager(tempNamespace, k8s_deployment_name, upgradeMessageArray);
 
     const deployment = await k8sMgr.pullDeploymentObject();
-
-    console.log(deployment);
-    // expect(deployment).to.be.a(V1Deployment);
+    expect(deployment).to.be.an.instanceof(V1Deployment);
   });
 
   it('Upgrade doesnt throw error when image not found', async () => {

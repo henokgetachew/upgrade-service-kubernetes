@@ -72,24 +72,24 @@ export default class K8sManager {
         container: k8s.V1Container
     }> | undefined> {
 
-    const allContainers:Array<{ deployment: k8s.V1Deployment, container: k8s.V1Container }> = [];
+    const containers:{ deployment: k8s.V1Deployment, container: k8s.V1Container }[] = [];
 
     // Look for the container in the other deployments within the same namespace
     const deployments: k8s.V1DeploymentList = await this.getDeploymentsList();
     for (const deployment of deployments.items) {
-      const containers = this.getContainerObjects(deployment, containerName);
-      if (containers?.length) {
-        allContainers.push(...containers.map(container => ({ deployment, container }))) ;
-      }
+      const deploymentContainers = this
+        .getContainerObjects(deployment, containerName)
+        .map(container => ({ deployment, container }));
+      containers.push(...deploymentContainers) ;
     }
 
-    return allContainers;
+    return containers;
   }
 
-  private getContainerObjects(deployment: k8s.V1Deployment, containerName: string) {
+  private getContainerObjects(deployment: k8s.V1Deployment, containerName: string):k8s.V1Container[] {
     // Match containers of kind containerName or containerName-<number>
     const regex = new RegExp('^' + containerName + '(-[0-9]+)?$');
-    return deployment?.spec?.template?.spec?.containers.filter(container => regex.test(container.name));
+    return deployment?.spec?.template?.spec?.containers.filter(container => regex.test(container.name)) || [];
   }
 
   private async modifyContainerImageForDeployment() {
@@ -133,7 +133,6 @@ export default class K8sManager {
     const pods: k8s.V1PodList = v1PodList.body;
     const podsNotReady: IPodNotReady[] = [];
 
-    // console.log(pods);
     pods.items.forEach((pod => {
       const notReadyContainers = pod.status?.containerStatuses?.filter(
         container => container.state?.running === undefined);
@@ -158,8 +157,9 @@ export default class K8sManager {
   }
 
   async getCurrentVersion(container: string): Promise<string> {
+    const NOT_FOUND = 'Not found';
     const response = await this.getContainersInNamespace(container);
-    const images = response?.map(response => response?.container.image ?? 'Not found');
-    return images?.join(' ') || '';
+    const images = response?.map(response => response?.container.image ?? NOT_FOUND);
+    return images?.join(' ') || NOT_FOUND;
   }
 }

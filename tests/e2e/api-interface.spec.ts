@@ -8,7 +8,6 @@ import UpgradeService from '../../src/lib/upgrade-service';
 const SERVICE_URL = 'http://localhost:5008';
 
 chai.use(chaiHttp);
-let mainPod:string;
 
 const getStatus = () => chai.request(SERVICE_URL).get('/server-status');
 const waitForDeploymentReady = async () => {
@@ -24,7 +23,6 @@ const testContainerTag = async (upgradeService:UpgradeService, containerName:str
   let currentTag;
   for (let i = 5; i > 0; i--) {
     currentTag = await upgradeService.getCurrentVersion(containerName);
-    console.log(currentTag, imageTag);
     if (currentTag === imageTag) {
       return;
     }
@@ -39,9 +37,9 @@ describe('The API', () => {
   before(async () => {
     process.env.CHT_NAMESPACE = tempNamespace;
     process.env.CHT_DEPLOYMENT_NAME = k8s_deployment_name;
-    /*await runCommand(
+    await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox.yaml `,
-      'Creating a busybox deployment');*/
+      'Creating a busybox deployment');
 
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox-1.yaml`,
@@ -50,11 +48,6 @@ describe('The API', () => {
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox-2.yaml`,
       'Creating a busybox-1 deployment');
-
-    const pods = await runCommand(`kubectl -n ${tempNamespace} get pods`, 'done');
-    console.log(pods);
-    mainPod = pods.replace('\n', ' ').split(' ').find(str => str.startsWith('archv3-deployment-')) || '';
-
     // wait for the upgrade service to be online
     let ready;
     do {
@@ -64,13 +57,6 @@ describe('The API', () => {
         // ignore socket timeout errors
       }
     } while (!ready);
-  });
-
-  afterEach(async () => {
-    const logs = await runCommand(
-      `kubectl -n ${tempNamespace} logs ${mainPod} upgrade-service`,
-      '');
-    console.log(logs);
   });
 
   after(() => {
@@ -117,6 +103,7 @@ describe('The API', () => {
     const imageTag = upgradeMessagePayload.containers[0].image_tag;
     const containerPrefix = upgradeMessagePayload.containers[0].container_name;
 
+    await testContainerTag(upgradeService, `${containerPrefix}`, imageTag);
     await testContainerTag(upgradeService, `${containerPrefix}-1`, imageTag);
     await testContainerTag(upgradeService, `${containerPrefix}-2`, imageTag);
   });
@@ -141,14 +128,15 @@ describe('The API', () => {
 
     expect(res).to.have.status(200);
     expect(res.body).to.be.deep.equal({
+      'busybox': { ok: true },
       'busybox-1': { ok: true },
       'busybox-2': { ok: true },
-      // yyy: { ok: false },
     });
 
     const imageTag = upgradeMessagePayload.containers[0].image_tag;
     const containerPrefix = upgradeMessagePayload.containers[0].container_name;
 
+    await testContainerTag(upgradeService, `${containerPrefix}`, imageTag);
     await testContainerTag(upgradeService, `${containerPrefix}-1`, imageTag);
     await testContainerTag(upgradeService, `${containerPrefix}-2`, imageTag);
   });
