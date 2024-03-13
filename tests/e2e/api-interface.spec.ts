@@ -43,7 +43,7 @@ describe('The API', () => {
 
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox-2.yaml`,
-      'Creating a busybox-1 deployment');
+      'Creating a busybox-2 deployment');
     // wait for the upgrade service to be online
     let ready;
     do {
