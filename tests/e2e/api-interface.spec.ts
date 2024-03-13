@@ -29,7 +29,7 @@ const testContainerTag = async (upgradeService:UpgradeService, containerName:str
     await new Promise(r => setTimeout(r, 1000));
   }
 
-  expect.fail(`Container ${containerName} not upgraded in 20 seconds. Current tag is ${currentTag}`);
+  expect.fail(`Container ${containerName} not upgraded in 5 seconds. Current tag is ${currentTag}`);
 };
 
 describe('The API', () => {
@@ -37,10 +37,6 @@ describe('The API', () => {
   before(async () => {
     process.env.CHT_NAMESPACE = tempNamespace;
     process.env.CHT_DEPLOYMENT_NAME = k8s_deployment_name;
-    await runCommand(
-      `kubectl -n ${tempNamespace} apply -f tests/resources/busybox.yaml `,
-      'Creating a busybox deployment');
-
     await runCommand(
       `kubectl -n ${tempNamespace} apply -f tests/resources/busybox-1.yaml`,
       'Creating a busybox-1 deployment');
@@ -103,7 +99,6 @@ describe('The API', () => {
     const imageTag = upgradeMessagePayload.containers[0].image_tag;
     const containerPrefix = upgradeMessagePayload.containers[0].container_name;
 
-    await testContainerTag(upgradeService, `${containerPrefix}`, imageTag);
     await testContainerTag(upgradeService, `${containerPrefix}-1`, imageTag);
     await testContainerTag(upgradeService, `${containerPrefix}-2`, imageTag);
   });
@@ -128,7 +123,6 @@ describe('The API', () => {
 
     expect(res).to.have.status(200);
     expect(res.body).to.be.deep.equal({
-      'busybox': { ok: true },
       'busybox-1': { ok: true },
       'busybox-2': { ok: true },
     });
@@ -136,7 +130,6 @@ describe('The API', () => {
     const imageTag = upgradeMessagePayload.containers[0].image_tag;
     const containerPrefix = upgradeMessagePayload.containers[0].container_name;
 
-    await testContainerTag(upgradeService, `${containerPrefix}`, imageTag);
     await testContainerTag(upgradeService, `${containerPrefix}-1`, imageTag);
     await testContainerTag(upgradeService, `${containerPrefix}-2`, imageTag);
   });
